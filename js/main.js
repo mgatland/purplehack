@@ -98,10 +98,6 @@ world.badness = createGrid();
 
 var mines = [];
 
-for (var x = 0; x < width; x++) {
-	world.badness.set(x, height-1, maxBadness);
-}
-
 var forEachCell = function(thing, func) {
 	for (var i = 0; i < width; i ++) {
 		for (var j = 0; j < height; j++) {
@@ -215,9 +211,22 @@ var removeMine = function(mine) {
 	mines.splice(index, 1);	
 }
 
+var spreadBadnessInto = function(badness, pos) {
+	var currentBadness = badness.get(pos.x, pos.y);
+	if (currentBadness == 0) {
+		badness.set(pos.x, pos.y, 1 + rnd(maxBadness / 2));
+		//destroy mines if present
+		var mine = mineAt(pos.x, pos.y);
+		if (mine != null) {
+			removeMine(mine);
+		}
+	}
+}
+
 var updateBadness = function() {
 	forEachCell(world.badness, function (badness, x, y) {
 		var currentBadness = badness.get(x,y);
+
 		if (currentBadness > 0) {
 			if (currentBadness < maxBadness) {
 				//spread faster onto empty cells
@@ -227,25 +236,23 @@ var updateBadness = function() {
 					badness.set(x, y, currentBadness + 1);
 				}
 			} else {
-				var badnessAbove = badness.get(x, y-1);
-				if (badnessAbove == 0) {
-					badness.set(x, y-1, 1 + rnd(maxBadness / 2));
-					//destroy mines if present
-					var mine = mineAt(x, y - 1);
-					if (mine != null) {
-						removeMine(mine);
-					}
-				}
+				var above = {x: x, y: y - 1};
+				spreadBadnessInto(badness, above);
 			}
+		}
+
+		//hack to get the badness started
+		if (y === height - 1) {
+			spreadBadnessInto(badness, {x: x, y:y});
 		}
 	})
 }
 
 var explode = function (pos) {
-	for (var y = pos.y - 3; y <= pos.y + 3; y++) {
-		var span = 7 - Math.abs(y - pos.y) * 2;
+	for (var x = pos.x - 3; x <= pos.x + 3; x++) {
+		var span = 7 - Math.abs(x - pos.x) * 2;
 		console.log(span);
-		for (var x = pos.x - span; x <= pos.x + span; x++) {
+		for (var y = pos.y - span; y <= pos.y + span; y++) {
 			world.badness.set(x,y,0);
 			world.wall.set(x, y, -1);
 		}
