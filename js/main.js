@@ -8,15 +8,19 @@ var ctx = canvas.getContext("2d");
 var pixelSize = 16;
 var width = 32;
 var height = width;
-var backgroundColor = "rgb()";
+var maxBadness = 360; //number of frames it takes for badness to capture a cell.
+var numMines = 13;
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
-var mainColor = "#c50080";
-var mainColor2 = "#800053";
-var accentColor = "#25d500";
-var accentColor2 = "#3DA028";
-var accent2Color = "#FFF800";
-var accent2Color2 = "#BFBC30";
+var purple1 = "#c50080";
+var purple2 = "#800053";  
+
+var green1 = "#25d500";
+var green2 = "#3DA028";
+var green3 = "#59EA3A";
+
+var yellow1 = "#FFF800";
+var yellow2 = "#BFBC30";
 
 canvas.width = width*pixelSize;
 canvas.height = height*pixelSize;
@@ -52,27 +56,67 @@ var createGrid = function () {
 	var grid = [];
 	for (var i = 0; i < width; i ++) {
 		grid[i] = [];
+		for (var j = 0; j < height; j++) {
+			grid[i][j] = 0;
+		}
 	}
 	return grid;
 }
 	
+var world = {};
+world.wall = createGrid();
+world.badness = createGrid();
 
-var grid = createGrid();
+var mines = [];
 
+for (var x = 0; x < width; x++) {
+	world.badness[x][height-1] = maxBadness;
+}
 
-var forEachCell = function(grid, func) {
+var forEachCell = function(thing, func) {
 	for (var i = 0; i < width; i ++) {
 		for (var j = 0; j < height; j++) {
-			func(grid, i, j);
+			func(thing, i, j);
 		}
 	}
 }
 
-forEachCell(grid, function(grid, x, y) {
+forEachCell(world.wall, function(grid, x, y) {
 	if (rnd(10) > 7) {
 		grid[x][y] = 1;
 	}
 });
+
+var mineAt = function (x, y) {
+	var foundMine = null;
+	mines.forEach(function (mine) {
+		if (mine.pos.x === x && mine.pos.y === y) {
+			foundMine = mine;
+		}
+	});
+	return foundMine;
+}
+
+//create mines
+
+for (var i = 0; i < numMines; i++) {
+	var x = -1;
+	var y = -1;
+	while(x === -1) {
+		var x = rnd(width);
+		var y = rnd(height);
+		if (world.wall[x][y] === 0 && mineAt(x, y) === null) {
+			var mine = { pos: {}};
+			mine.pos.x = x;
+			mine.pos.y = y;
+			mines.push(mine);
+		} else {
+			x = -1; //loop again
+		}
+	}	
+}
+
+
 
 // Handle keyboard controls
 var keysDown = {};
@@ -85,28 +129,35 @@ addEventListener("keyup", function (e) {
 	delete keysDown[e.keyCode];
 }, false);
 
-var drawPixel = function (x, y) {
+var drawPixel = function (x, y, color) {
+	ctx.fillStyle = color;
 	ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
 }
 
 // Draw everything
 var render = function () {
-	ctx.fillStyle = mainColor2;
+	ctx.fillStyle = purple2;
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
-
-	ctx.fillStyle = accent2Color;
-	forEachCell(grid, function (grid, x, y) {
-		if (grid[x][y] === 1) {
-			drawPixel(x, y);
+	
+	forEachCell(world, function (world, x, y) {
+		if (world.badness[x][y] >= maxBadness) {
+			drawPixel(x, y, green2);
+		} else if (world.badness[x][y] > 0) {
+			drawPixel(x, y, green3);
+		} else if (world.wall[x][y] > 0) {
+			drawPixel(x, y, purple1);
 		}
 	});
 
-	ctx.fillStyle = accentColor;
-	drawPixel(player.pos.x, player.pos.y);
+	mines.forEach(function (mine) {
+		drawPixel(mine.pos.x, mine.pos.y, yellow1);
+	});
+
+	drawPixel(player.pos.x, player.pos.y, green1);
 
 	// Score
 	ctx.fillStyle = "rgb(250, 250, 250)";
-	ctx.font = "24px Helvetica";
+	ctx.font = "24px Helvetica, Arial";
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";
 	ctx.fillText("Goblins caught: " + 0, 32, 32);
@@ -124,6 +175,40 @@ var main = function () {
 };
 
 var update = function (delta) {
+	updatePlayer();
+	updateBadness();
+}
+
+var removeMine = function(mine) {
+	var index = mines.indexOf(mine);
+	mines.splice(index, 1);	
+}
+
+var updateBadness = function() {
+	forEachCell(world.badness, function (badness, x, y) {
+		if (badness[x][y] > 0) {
+			if (badness[x][y] < maxBadness) {
+				//spread faster onto empty cells
+				if (world.wall[x][y] === 0) {
+					badness[x][y]+= 3;
+				} else {
+					badness[x][y] += 1;
+				}
+			} else {
+				if (badness[x][y-1] == 0) {
+					badness[x][y-1] = 1;
+					//destroy mines if present
+					var mine = mineAt(x, y - 1);
+					if (mine != null) {
+						removeMine(mine);
+					}
+				}
+			}
+		}
+	})
+}
+
+var updatePlayer = function() {
 	if (player.moveTimer == 0) {
 		var newPos = {};
 		newPos.x = player.pos.x;
@@ -141,14 +226,14 @@ var update = function (delta) {
 		}	
 
 		if (newPos != null) {
-			if (grid[newPos.x][newPos.y] != 1) {
+			if (world.wall[newPos.x][newPos.y] != 1) {
 				player.pos = newPos;
 				player.moveTimer = player.moveDelay;
 			}
 		}
 	} else {
 		player.moveTimer--;
-	}
+	}	
 }
 
 var then = Date.now();
