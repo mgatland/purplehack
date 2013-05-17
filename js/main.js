@@ -14,6 +14,7 @@ var numMines = 13;
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var purple1 = "#c50080";
 var purple2 = "#800053";  
+var purple3 = "#571C43"; 
 
 var green1 = "#25d500";
 var green2 = "#3DA028";
@@ -53,13 +54,41 @@ player.moveDelay = 5;
 player.moveTimer = 0;
 
 var createGrid = function () {
-	var grid = [];
+	var gridData = [];
 	for (var i = 0; i < width; i ++) {
-		grid[i] = [];
+		gridData[i] = [];
 		for (var j = 0; j < height; j++) {
-			grid[i][j] = 0;
+			gridData[i][j] = 0;
 		}
 	}
+
+	var grid = {};
+
+	grid.isValid = function (x, y) {
+		if (x < 0 || x >= width) {
+			return false;
+		}
+		if (y < 0 || y >= height) {
+			return false;	
+		}
+		return true;
+	}
+
+	grid.get = function (x, y) {
+		if (!this.isValid(x, y)) {
+			return 0;
+		}
+		return gridData[x][y]; 
+	}; 
+
+	grid.set = function (x, y, value) {
+		if (!this.isValid(x, y)) {
+			return;
+		}
+		gridData[x][y] = value;
+	}
+
+
 	return grid;
 }
 	
@@ -70,7 +99,7 @@ world.badness = createGrid();
 var mines = [];
 
 for (var x = 0; x < width; x++) {
-	world.badness[x][height-1] = maxBadness;
+	world.badness.set(x, height-1, maxBadness);
 }
 
 var forEachCell = function(thing, func) {
@@ -83,7 +112,7 @@ var forEachCell = function(thing, func) {
 
 forEachCell(world.wall, function(grid, x, y) {
 	if (rnd(10) > 7) {
-		grid[x][y] = 1;
+		grid.set(x, y, 1);
 	}
 });
 
@@ -105,7 +134,7 @@ for (var i = 0; i < numMines; i++) {
 	while(x === -1) {
 		var x = rnd(width);
 		var y = rnd(height);
-		if (world.wall[x][y] === 0 && mineAt(x, y) === null) {
+		if (world.wall.get(x, y) != 1 && mineAt(x, y) === null) {
 			var mine = { pos: {}};
 			mine.pos.x = x;
 			mine.pos.y = y;
@@ -140,12 +169,14 @@ var render = function () {
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
 	
 	forEachCell(world, function (world, x, y) {
-		if (world.badness[x][y] >= maxBadness) {
+		if (world.badness.get(x, y) >= maxBadness) {
 			drawPixel(x, y, green2);
-		} else if (world.badness[x][y] > 0) {
+		} else if (world.badness.get(x, y) > 0) {
 			drawPixel(x, y, green3);
-		} else if (world.wall[x][y] > 0) {
+		} else if (world.wall.get(x, y) > 0) {
 			drawPixel(x, y, purple1);
+		} else if (world.wall.get(x, y) == -1) {
+			drawPixel(x, y, purple3);
 		}
 	});
 
@@ -186,17 +217,19 @@ var removeMine = function(mine) {
 
 var updateBadness = function() {
 	forEachCell(world.badness, function (badness, x, y) {
-		if (badness[x][y] > 0) {
-			if (badness[x][y] < maxBadness) {
+		var currentBadness = badness.get(x,y);
+		if (currentBadness > 0) {
+			if (currentBadness < maxBadness) {
 				//spread faster onto empty cells
-				if (world.wall[x][y] === 0) {
-					badness[x][y]+= 3;
+				if (world.wall.get(x, y) != 1) {
+					badness.set(x, y, currentBadness + 3);
 				} else {
-					badness[x][y] += 1;
+					badness.set(x, y, currentBadness + 1);
 				}
 			} else {
-				if (badness[x][y-1] == 0) {
-					badness[x][y-1] = 1;
+				var badnessAbove = badness.get(x, y-1);
+				if (badnessAbove == 0) {
+					badness.set(x, y-1, 1 + rnd(maxBadness / 2));
 					//destroy mines if present
 					var mine = mineAt(x, y - 1);
 					if (mine != null) {
@@ -206,6 +239,17 @@ var updateBadness = function() {
 			}
 		}
 	})
+}
+
+var explode = function (pos) {
+	for (var y = pos.y - 3; y <= pos.y + 3; y++) {
+		var span = 7 - Math.abs(y - pos.y) * 2;
+		console.log(span);
+		for (var x = pos.x - span; x <= pos.x + span; x++) {
+			world.badness.set(x,y,0);
+			world.wall.set(x, y, -1);
+		}
+	}
 }
 
 var updatePlayer = function() {
@@ -226,9 +270,15 @@ var updatePlayer = function() {
 		}	
 
 		if (newPos != null) {
-			if (world.wall[newPos.x][newPos.y] != 1) {
+			if (world.wall.get(newPos.x, newPos.y) != 1) {
 				player.pos = newPos;
 				player.moveTimer = player.moveDelay;
+				//did we step on a mine?
+				var mine = mineAt(newPos.x, newPos.y);
+				if (mine != null) {
+					removeMine(mine);
+					explode(mine.pos);
+				}
 			}
 		}
 	} else {
