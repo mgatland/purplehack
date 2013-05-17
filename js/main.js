@@ -10,6 +10,7 @@ var width = 32;
 var height = width;
 var maxBadness = 360; //number of frames it takes for badness to capture a cell.
 var numMines = 13;
+var explosionRadius = 7;
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var purple1 = "#c50080";
@@ -183,11 +184,11 @@ var render = function () {
 	drawPixel(player.pos.x, player.pos.y, green1);
 
 	// Score
-	ctx.fillStyle = "rgb(250, 250, 250)";
+	/*ctx.fillStyle = "rgb(250, 250, 250)";
 	ctx.font = "24px Helvetica, Arial";
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";
-	ctx.fillText("Goblins caught: " + 0, 32, 32);
+	ctx.fillText("Goblins caught: " + 0, 32, 32);*/
 };
 
 // The main game loop
@@ -248,9 +249,12 @@ var updateBadness = function() {
 	})
 }
 
+
+
 var explode = function (pos) {
-	for (var x = pos.x - 3; x <= pos.x + 3; x++) {
-		var span = 7 - Math.abs(x - pos.x) * 2;
+	var explosionSmallRadius = Math.ceil(explosionRadius / 2);
+	for (var x = pos.x - explosionSmallRadius; x <= pos.x + explosionSmallRadius; x++) {
+		var span = explosionRadius - Math.abs(x - pos.x) * 2;
 		console.log(span);
 		for (var y = pos.y - span; y <= pos.y + span; y++) {
 			world.badness.set(x,y,0);
