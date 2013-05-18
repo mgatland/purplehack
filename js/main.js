@@ -9,8 +9,9 @@ var pixelSize = 16;
 var width = 32;
 var height = width;
 var maxBadness = 120; //number of frames it takes for badness to capture a cell.
-var numMines = 13;
+var numMines = 26;
 var explosionRadius = 7;
+var maxHealth = 120; //frames it takes to die when standing in goop
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var purple1 = "#c50080";
@@ -25,7 +26,7 @@ var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
 
 canvas.width = width*pixelSize;
-canvas.height = height*pixelSize;
+canvas.height = (height+2)*pixelSize;
 document.body.appendChild(canvas);
 
 //to integer	
@@ -53,6 +54,7 @@ player.pos.x = toInt(width / 2);
 player.pos.y = toInt(height / 2);
 player.moveDelay = 5;
 player.moveTimer = 0;
+player.health = maxHealth;
 
 var createGrid = function () {
 	var gridData = [];
@@ -181,7 +183,8 @@ var render = function () {
 		drawPixel(mine.pos.x, mine.pos.y, yellow1);
 	});
 
-	drawPixel(player.pos.x, player.pos.y, green1);
+	var playerColor = (player.health > 0) ? green1 : "rgb(0,0,0)";
+	drawPixel(player.pos.x, player.pos.y, playerColor);
 
 	// Score
 	/*ctx.fillStyle = "rgb(250, 250, 250)";
@@ -189,6 +192,12 @@ var render = function () {
 	ctx.textAlign = "left";
 	ctx.textBaseline = "top";
 	ctx.fillText("Goblins caught: " + 0, 32, 32);*/
+
+	//health
+	ctx.fillStyle = green2;
+	ctx.fillRect(0,(height+1)*pixelSize, width*pixelSize, 1*pixelSize);
+	ctx.fillStyle = green1;
+	ctx.fillRect(0,(height+1)*pixelSize, toInt(player.health*width/maxHealth)*pixelSize, 1*pixelSize);
 };
 
 // The main game loop
@@ -251,7 +260,6 @@ var explode = function (pos) {
 	var explosionSmallRadius = Math.ceil(explosionRadius / 2);
 	for (var x = pos.x - explosionSmallRadius; x <= pos.x + explosionSmallRadius; x++) {
 		var span = explosionRadius - Math.abs(x - pos.x) * 2;
-		console.log(span);
 		for (var y = pos.y - span; y <= pos.y + span; y++) {
 			world.badness.set(x,y,0);
 			world.wall.set(x, y, -1);
@@ -260,6 +268,10 @@ var explode = function (pos) {
 }
 
 var updatePlayer = function() {
+
+	if (player.health === 0) {
+		return;
+	}
 	if (player.moveTimer == 0) {
 		var newPos = {};
 		newPos.x = player.pos.x;
@@ -290,7 +302,18 @@ var updatePlayer = function() {
 		}
 	} else {
 		player.moveTimer--;
-	}	
+	}
+	if (world.badness.get(player.pos.x, player.pos.y) > 0) {
+		player.health--;
+		if (player.health < 0) {
+			player.health = 0;
+		}
+	} else {
+		player.health++;
+		if (player.health > maxHealth) {
+			player.health = maxHealth;
+		}
+	}
 }
 
 var then = Date.now();
