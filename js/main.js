@@ -214,13 +214,8 @@ var removeMine = function(mine) {
 
 var spreadBadnessInto = function(badness, pos) {
 	var currentBadness = badness.get(pos.x, pos.y);
-	if (currentBadness == 0) {
+	if (currentBadness == 0 && world.wall.get(pos.x, pos.y) <= 0) {
 		badness.set(pos.x, pos.y, 1 + rnd(maxBadness / 2));
-		//destroy mines if present
-		var mine = mineAt(pos.x, pos.y);
-		if (mine != null) {
-			removeMine(mine);
-		}
 	}
 }
 
@@ -238,7 +233,13 @@ var updateBadness = function() {
 				}
 			} else {
 				var above = {x: x, y: y - 1};
+				var below = {x: x, y: y + 1};
+				var left = {x: x - 1, y: y};
+				var right = {x: x + 1, y: y};
 				spreadBadnessInto(badness, above);
+				spreadBadnessInto(badness, below);
+				spreadBadnessInto(badness, left);
+				spreadBadnessInto(badness, right);
 			}
 		}
 
