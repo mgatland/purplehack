@@ -8,7 +8,7 @@ var ctx = canvas.getContext("2d");
 var pixelSize = 16;
 var width = 32;
 var height = width;
-var maxBadness = 360; //number of frames it takes for badness to capture a cell.
+var maxBadness = 120; //number of frames it takes for badness to capture a cell.
 var numMines = 13;
 var explosionRadius = 7;
 
@@ -225,12 +225,7 @@ var updateBadness = function() {
 
 		if (currentBadness > 0) {
 			if (currentBadness < maxBadness) {
-				//spread faster onto empty cells
-				if (world.wall.get(x, y) != 1) {
-					badness.set(x, y, currentBadness + 3);
-				} else {
-					badness.set(x, y, currentBadness + 1);
-				}
+				badness.set(x, y, currentBadness + 1);
 			} else {
 				var above = {x: x, y: y - 1};
 				var below = {x: x, y: y + 1};
