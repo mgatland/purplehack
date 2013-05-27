@@ -29,7 +29,7 @@ var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
 
 canvas.width = width*pixelSize;
-canvas.height = (height+2)*pixelSize;
+canvas.height = (height+3)*pixelSize;
 document.body.appendChild(canvas);
 
 //to integer	
@@ -196,12 +196,16 @@ var render = function () {
 	ctx.textBaseline = "top";
 	ctx.fillText("Goblins caught: " + 0, 32, 32);*/
 
-	//health
-	ctx.fillStyle = green2;
-	ctx.fillRect(0,(height+1)*pixelSize, width*pixelSize, 1*pixelSize);
-	ctx.fillStyle = green1;
-	ctx.fillRect(0,(height+1)*pixelSize, toInt(player.health*width/maxHealth)*pixelSize, 1*pixelSize);
+	drawBar(1, player.health, maxHealth, green1, purple3);
+	drawBar(2, numMines - mines.length, numMines, yellow1, purple3);
 };
+
+var drawBar = function(row, current, max, foreColor, backColor) {
+	ctx.fillStyle = backColor;
+	ctx.fillRect(0,(height+row)*pixelSize, width*pixelSize, 1*pixelSize);
+	ctx.fillStyle = foreColor;
+	ctx.fillRect(0,(height+row)*pixelSize, toInt(current*width/max)*pixelSize, 1*pixelSize);
+}
 
 // The main game loop
 var main = function () {

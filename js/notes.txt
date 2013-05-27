@@ -8,6 +8,8 @@ On a Caltrain in California.
 
 2013-05-26
 
+11 PM
+
 Feedback - Igor would like more control over where the goop goes. I don't want to add any new features yet; let's make the expanders have a longer lasting effect on goop behaviour.
 
 Because I'm on an aeroplane right now, i'm using calm language. They're now called 'expanders' and when you touch one it 'expands'. When you stay in goop for too long, you 'reset'.
@@ -37,3 +39,15 @@ Originally I thought you'd be scored on how long you stayed ungooped, and would 
 
 Let's formalize the scoring by adding a big, visible score counter.
 Actually, let's keep the game language-free and make the score a bar across the bottom, like health is. (Using numbers would probably be much easier to understand; I know this and am stubbornly choosing the bar anyway because I want a particular look.)
+
+12:55 AM
+
+As expected, representing score as a bar is not very clear. Most importantly, even if you understand what it is, how can you compare your current score to your previous attempts?
+
+I could show it visually - when a game ends, your scoe bar could float downwards and become a score on a local high score board. That might convay what's happening - then I'd need a way to restart the game; how can I show that without language? Is there a symbol for 'restart'? Yes there is, YouTube uses it - it's an arrow going around in a circle or square.
+
+It's really time for sleep, though.
+
+Next time:
+- consider a high score table of the bar-based high scores, and a reset button
+- consider just displaying the score as a number instead...
