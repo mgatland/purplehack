@@ -248,7 +248,7 @@ var updateBadness = function() {
 		}
 
 		//hack to get the badness started
-		if (y === height - 1) {
+		if (y === height - 1 || y === 0) {
 			spreadBadnessInto(badness, {x: x, y:y});
 		}
 	})
