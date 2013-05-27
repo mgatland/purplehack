@@ -262,19 +262,23 @@ var updateBadness = function() {
 
 var triggerExpansion = function (pos) {
 	//clear goop and walls from expansion area
-	var explosionSmallRadius = Math.ceil(explosionRadius / 2);
-	for (var x = pos.x - explosionSmallRadius; x <= pos.x + explosionSmallRadius; x++) {
-		var span = explosionRadius - Math.abs(x - pos.x) * 2;
-		for (var y = pos.y - span; y <= pos.y + span; y++) {
-			world.badness.set(x,y,0);
-			world.wall.set(x, y, -1);
-		}
-	}
+	forEveryCellInDiamond(pos, explosionRadius, function(x, y) {
+		world.badness.set(x,y,0);
+		world.wall.set(x, y, -1);
+	});
 	var expansion = { pos: pos, age: 0};
 	expansions.push(expansion);
 }
 
-
+var forEveryCellInDiamond = function (pos, bigRadius, func) {
+	var smallRadius = Math.ceil(bigRadius / 2);
+	for (var x = pos.x - smallRadius; x <= pos.x + smallRadius; x++) {
+		var span = bigRadius - Math.abs(x - pos.x) * 2;
+		for (var y = pos.y - span; y <= pos.y + span; y++) {
+			func(x, y);
+		}
+	}
+}
 
 var updateExpansions = function() {
 	expansions.forEach(function (expansion) {
@@ -283,14 +287,9 @@ var updateExpansions = function() {
 
 		//clear goop - this is a bit weird, we could've put this logic in the goop spread code
 		//todo: duplicate code
-
-		var explosionSmallRadius = Math.ceil(explosionRadius / 2);
-		for (var x = pos.x - explosionSmallRadius; x <= pos.x + explosionSmallRadius; x++) {
-			var span = explosionRadius - Math.abs(x - pos.x) * 2;
-			for (var y = pos.y - span; y <= pos.y + span; y++) {
-				world.badness.set(x,y,0);
-			}
-		}
+		forEveryCellInDiamond(expansion.pos, explosionRadius, function(x, y) {
+			world.badness.set(x,y,0);
+		});
 		if (expansion.age == maxExpansionAge) {
 			removeFromArray(expansion, expansions);
 		}
