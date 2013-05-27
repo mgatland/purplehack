@@ -12,11 +12,14 @@ var maxBadness = 120; //number of frames it takes for badness to capture a cell.
 var numMines = 26;
 var explosionRadius = 7;
 var maxHealth = 120; //frames it takes to die when standing in goop
+var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
+
+var expansions = []; //a list of mine expanders {pos {x, y}, age }
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var purple1 = "#c50080";
-var purple2 = "#800053";  
-var purple3 = "#571C43"; 
+var purple2 = "#800053";
+var purple3 = "#571C43";
 
 var green1 = "#25d500";
 var green2 = "#3DA028";
@@ -214,11 +217,12 @@ var main = function () {
 var update = function (delta) {
 	updatePlayer();
 	updateBadness();
+	updateExpansions();
 }
 
-var removeMine = function(mine) {
-	var index = mines.indexOf(mine);
-	mines.splice(index, 1);	
+var removeFromArray = function(element, array) {
+	var index = array.indexOf(element);
+	array.splice(index, 1);
 }
 
 var spreadBadnessInto = function(badness, pos) {
@@ -256,7 +260,8 @@ var updateBadness = function() {
 
 
 
-var explode = function (pos) {
+var triggerExpansion = function (pos) {
+	//clear goop and walls from expansion area
 	var explosionSmallRadius = Math.ceil(explosionRadius / 2);
 	for (var x = pos.x - explosionSmallRadius; x <= pos.x + explosionSmallRadius; x++) {
 		var span = explosionRadius - Math.abs(x - pos.x) * 2;
@@ -265,6 +270,31 @@ var explode = function (pos) {
 			world.wall.set(x, y, -1);
 		}
 	}
+	var expansion = { pos: pos, age: 0};
+	expansions.push(expansion);
+}
+
+
+
+var updateExpansions = function() {
+	expansions.forEach(function (expansion) {
+		expansion.age++;
+		var pos = expansion.pos;
+
+		//clear goop - this is a bit weird, we could've put this logic in the goop spread code
+		//todo: duplicate code
+
+		var explosionSmallRadius = Math.ceil(explosionRadius / 2);
+		for (var x = pos.x - explosionSmallRadius; x <= pos.x + explosionSmallRadius; x++) {
+			var span = explosionRadius - Math.abs(x - pos.x) * 2;
+			for (var y = pos.y - span; y <= pos.y + span; y++) {
+				world.badness.set(x,y,0);
+			}
+		}
+		if (expansion.age == maxExpansionAge) {
+			removeFromArray(expansion, expansions);
+		}
+	});
 }
 
 var updatePlayer = function() {
@@ -295,8 +325,8 @@ var updatePlayer = function() {
 				//did we step on a mine?
 				var mine = mineAt(newPos.x, newPos.y);
 				if (mine != null) {
-					removeMine(mine);
-					explode(mine.pos);
+					removeFromArray(mine, mines);
+					triggerExpansion(mine.pos);
 				}
 			}
 		}

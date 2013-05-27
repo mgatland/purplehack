@@ -6,3 +6,10 @@ On a Caltrain in California.
 
 [X] make the slime come from the top and the bottom (I don't like it coming gradually from one side, gives too much time before it comes close)
 
+2013-05-26
+
+Feedback - Igor would like more control over where the goop goes. I don't want to add any new features yet; let's make the expanders have a longer lasting effect on goop behaviour.
+
+Because I'm on an aeroplane right now, i'm using calm language. They're now called 'expanders' and when you touch one it 'expands'. When you stay in goop for too long, you 'reset'.
+
+So: expansions need to persist, for now they'll simple stop goop from entering the expansion zone for n frames. (for later, they might expand over a number of frames instead of all at once.)
