@@ -12,4 +12,28 @@ Feedback - Igor would like more control over where the goop goes. I don't want t
 
 Because I'm on an aeroplane right now, i'm using calm language. They're now called 'expanders' and when you touch one it 'expands'. When you stay in goop for too long, you 'reset'.
 
-So: expansions need to persist, for now they'll simple stop goop from entering the expansion zone for n frames. (for later, they might expand over a number of frames instead of all at once.)
+So: expansions need to persist, for now they'll simple stop goop from entering the expansion zone for n frames. (for later, they might expand gradually over a number of frames instead of all at once.)
+
+Cool, I like this - now setting off the expanders feels a bit more meaningful.
+
+* * *
+
+Speaking of meaningful, let's remove health regeneration.
+
+See, you can currently run a long way through goop - almost across the whole world. And then you get to a mine, er, expander, set it off, and your healt hcomes back.
+
+This is meant to be a game about hoplessness and dread and doom - let's see how it plays if losing health is a permanent problem.
+
+.... yes. This is immediately more fun. Now the game is fast paced and dangerous.
+
+Playing this way, my instictive goal is to set off as many expanders as possible. You run around the map grabbing them, and towards the end it gets a little bit tactical.
+Your score could simply be how many you set off.
+
+This loses one fun element I like, the fun of trying to stand on the last remaining piece of land before it disappears. I could keep that fun by making score based on how long you survive (which was the original plan) but then i'd have two scoring systems - number of mines collected AND time alive, which feels inelegant.
+
+Originally I thought you'd be scored on how long you stayed ungooped, and would only use mines to prolong that. I prefer that (thematically) but it was just a whole lot more fun when the game was about actively colleciting mines, instead of passively waiting for the goop to come in.
+
+(I just tried playing both styles again. The 'survive as long as possible' is fun at the end -- you look for chains of nearby mines and move from one to the next -- but collecting mines definitely works better. It's exciting right from the start.)
+
+Let's formalize the scoring by adding a big, visible score counter.
+Actually, let's keep the game language-free and make the score a bar across the bottom, like health is. (Using numbers would probably be much easier to understand; I know this and am stubbornly choosing the bar anyway because I want a particular look.)

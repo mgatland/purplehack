@@ -337,11 +337,6 @@ var updatePlayer = function() {
 		if (player.health < 0) {
 			player.health = 0;
 		}
-	} else {
-		player.health++;
-		if (player.health > maxHealth) {
-			player.health = maxHealth;
-		}
 	}
 }
 
