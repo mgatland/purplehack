@@ -322,7 +322,7 @@ var updatePlayer = function() {
 		}	
 
 		if (newPos != null) {
-			if (world.wall.get(newPos.x, newPos.y) != 1) {
+			if (world.wall.isValid(newPos.x, newPos.y) && world.wall.get(newPos.x, newPos.y) != 1) {
 				player.pos = newPos;
 				player.moveTimer = player.moveDelay;
 				//did we step on a mine?
