@@ -30,7 +30,7 @@ var grey = "#939061";
 var darkGrey = "#44432D";
 
 var transitionWinTime = 90;
-var transitionLoseTime = 90;
+var transitionLoseTime = 160;
 
 canvas.width = width*pixelSize;
 canvas.height = (height+6)*pixelSize;
@@ -115,7 +115,7 @@ var newLevel = function() {
 
 	expansions = [];
 	player = {pos: {}};
-	numMines = level;
+	numMines = level + 2;
 	world = {};
 	mines = [];
 	player.pos.x = toInt(width / 2);
