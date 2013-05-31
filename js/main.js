@@ -1,33 +1,31 @@
 
 //following http://www.lostdecadegames.com/how-to-make-a-simple-html5-canvas-game/
 
-// Create the canvas
+// Constants:
 var canvas = document.createElement("canvas");
 var ctx = canvas.getContext("2d");
-
 var pixelSize = 16;
 var width = 32;
 var height = width;
 var normalTimeToGrowBadness = 120; //number of frames it takes for badness to capture a cell.
-var numMines = 26;
 var explosionRadius = 7;
 var maxHealth = 120; //frames it takes to die when standing in goop
 var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
-
-var expansions = []; //a list of mine expanders {pos {x, y}, age }
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var purple1 = "#c50080";
 var purple2 = "#800053";
 var purple3 = "#571C43";
 
-var green1 = "#fff";
+var playerColor = "#fff";
 var green2 = "#3DA028";
 var green3 = "#59EA3A";
 var badnessOverWalls = "#39A4BA";
 
 var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
+
+var transitionTime = 60; //number of transition frames between levels.
 
 canvas.width = width*pixelSize;
 canvas.height = (height+3)*pixelSize;
@@ -53,12 +51,15 @@ if (typeof KeyEvent == "undefined") {
     }
 }
 
-var player = {pos: {}};
-player.pos.x = toInt(width / 2);
-player.pos.y = toInt(height / 2);
-player.moveDelay = 5;
-player.moveTimer = 0;
-player.health = maxHealth;
+
+// game state:
+var expansions; //a list of mine expanders {pos {x, y}, age }
+var player;
+var numMines;
+var world;
+var mines;
+var level;
+var transition;
 
 var createGrid = function () {
 	var gridData = [];
@@ -98,12 +99,49 @@ var createGrid = function () {
 
 	return grid;
 }
-	
-var world = {};
-world.wall = createGrid();
-world.badness = createGrid();
 
-var mines = [];
+var newLevel = function() {
+	expansions = [];
+	player = {pos: {}};
+	numMines = level;
+	world = {};
+	mines = [];
+	player.pos.x = toInt(width / 2);
+	player.pos.y = toInt(height / 2);
+	player.moveDelay = 5;
+	player.moveTimer = 0;
+	player.health = maxHealth;
+
+	world.wall = createGrid();
+	world.badness = createGrid();
+
+	transition = null;
+
+	forEachCell(world.wall, function(grid, x, y) {
+		if (rnd(10) > 7) {
+			grid.set(x, y, 1);
+		}
+	});
+
+	//create mines
+
+	for (var i = 0; i < numMines; i++) {
+		var x = -1;
+		var y = -1;
+		while(x === -1) {
+			var x = rnd(width);
+			var y = rnd(height);
+			if (world.wall.get(x, y) != 1 && mineAt(x, y) === null) {
+				var mine = { pos: {}};
+				mine.pos.x = x;
+				mine.pos.y = y;
+				mines.push(mine);
+			} else {
+				x = -1; //loop again
+			}
+		}	
+	}
+}
 
 var forEachCell = function(thing, func) {
 	for (var i = 0; i < width; i ++) {
@@ -112,12 +150,6 @@ var forEachCell = function(thing, func) {
 		}
 	}
 }
-
-forEachCell(world.wall, function(grid, x, y) {
-	if (rnd(10) > 7) {
-		grid.set(x, y, 1);
-	}
-});
 
 var mineAt = function (x, y) {
 	var foundMine = null;
@@ -129,26 +161,8 @@ var mineAt = function (x, y) {
 	return foundMine;
 }
 
-//create mines
-
-for (var i = 0; i < numMines; i++) {
-	var x = -1;
-	var y = -1;
-	while(x === -1) {
-		var x = rnd(width);
-		var y = rnd(height);
-		if (world.wall.get(x, y) != 1 && mineAt(x, y) === null) {
-			var mine = { pos: {}};
-			mine.pos.x = x;
-			mine.pos.y = y;
-			mines.push(mine);
-		} else {
-			x = -1; //loop again
-		}
-	}	
-}
-
-
+level = 1;
+newLevel();
 
 // Handle keyboard controls
 var keysDown = {};
@@ -191,19 +205,24 @@ var render = function () {
 		drawPixel(mine.pos.x, mine.pos.y, yellow1);
 	});
 
-	var playerColor = (player.health > 0) ? green1 : "rgb(0,0,0)";
-	drawPixel(player.pos.x, player.pos.y, playerColor);
+	var currentPlayerColor = (player.health > 0) ? playerColor : "rgb(0,0,0)";
+	drawPixel(player.pos.x, player.pos.y, currentPlayerColor);
 
-	// Score
-	/*ctx.fillStyle = "rgb(250, 250, 250)";
-	ctx.font = "24px Helvetica, Arial";
-	ctx.textAlign = "left";
-	ctx.textBaseline = "top";
-	ctx.fillText("Goblins caught: " + 0, 32, 32);*/
+	drawTransition();
 
-	drawBar(1, player.health, maxHealth, green1, purple3);
+	drawBar(1, player.health, maxHealth, playerColor, purple3);
 	drawBar(2, numMines - mines.length, numMines, yellow1, purple3);
 };
+
+var drawTransition = function() {
+	if (transition == null) {
+		return;
+	}
+	var radius = transition.age * 2;
+	forEveryCellInDiamond(transition.pos, radius, function(x, y) {
+		drawPixel(x, y, yellow1);
+	});
+}
 
 var drawBar = function(row, current, max, foreColor, backColor) {
 	ctx.fillStyle = backColor;
@@ -227,6 +246,21 @@ var update = function (delta) {
 	updatePlayer();
 	updateBadness();
 	updateExpansions();
+
+	//updateTransition
+	if (transition != null) {
+		transition.age++;
+		if (transition.age == transitionTime) {
+			level++;
+			newLevel();	
+		}
+	}
+	//updateWinCondition
+	if (mines.length == 0 && transition == null) {
+		transition = {};
+		transition.pos = player.pos;
+		transition.age = 0;
+	}
 }
 
 var removeFromArray = function(element, array) {
