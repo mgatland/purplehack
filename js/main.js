@@ -347,6 +347,7 @@ var update = function () {
 		transition.age = 0;
 		transition.win = true;
 		transition.duration = transitionWinTime;
+		soundUtil.playWinSound();
 	}
 	if (player.health === 0 && transition == null) {
 		transition = {};
@@ -511,6 +512,7 @@ var SoundUtil = function() {
 	var audioContext;
 	var explodeSound;
 	var buzzSound;
+	var winSound;
 	var audioEnabled = true;
 	var muted = false;
 	var music;
@@ -532,6 +534,7 @@ var SoundUtil = function() {
 	music = new Audio("music/DJ DOS - LOOP (Creative Commons Attribution-Share Alike 3.0)" + extension); 
 	explodeSound = new Audio("sounds/thump" + extension);
 	buzzSound = new Audio("sounds/buzz" + extension);
+	winSound = new Audio("sounds/win" + extension);
 	music.loop = true;
 
 	function play(sound) {
@@ -547,6 +550,10 @@ var SoundUtil = function() {
 
 	this.playExplodeSound = function() {
 		play(explodeSound);
+	}
+
+	this.playWinSound = function() {
+		play(winSound);
 	}
 
 	this.playBuzz = function() {
