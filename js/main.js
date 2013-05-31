@@ -18,14 +18,16 @@ var purple2 = "#800053";
 var purple3 = "#571C43";
 
 var playerColor = "#fff";
-var green2 = "#3DA028";
+var badnessColor = "#3DA028";
+var badnessFlashColor = "#9A9D9A";
 var green3 = "#59EA3A";
 var badnessOverWalls = "#39A4BA";
 
 var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
 
-var transitionTime = 90; //number of transition frames between levels.
+var transitionWinTime = 90;
+var transitionLoseTime = 90;
 
 canvas.width = width*pixelSize;
 canvas.height = (height+3)*pixelSize;
@@ -187,7 +189,11 @@ var render = function () {
 	
 	forEachCell(world, function (world, x, y) {
 		if (world.badness.get(x, y) >= maxBadnessAt(x, y)) {
-			drawPixel(x, y, green2);
+			var color = badnessColor;
+			if (toInt(player.flashing / 4) % 2 != 0) {
+				color = badnessFlashColor;
+			}
+			drawPixel(x, y, color);
 		} else if (world.badness.get(x, y) > 0) {
 			if (isSpace(x, y)) {
 				drawPixel(x, y, green3);
@@ -217,8 +223,7 @@ var drawPlayer = function() {
 	if (player.hidden) {
 		return;
 	}
-	var currentPlayerColor = (player.health > 0) ? playerColor : "rgb(0,0,0)";
-	drawPixel(player.pos.x, player.pos.y, currentPlayerColor);
+	drawPixel(player.pos.x, player.pos.y, playerColor);
 }
 
 var forEveryCellInTeleportAnimation = function(pos, frame, func) {
@@ -238,6 +243,9 @@ var drawTransition = function() {
 		return;
 	}
 	if (transition.age < 7) {
+		return;
+	}
+	if (transition.win === false) {
 		return;
 	}
 	if (transition.age == 7) {
@@ -277,15 +285,27 @@ var update = function (delta) {
 	//updateTransition
 	if (transition != null) {
 		transition.age++;
-		if (transition.age == transitionTime) {
-			level++;
+		if (transition.age == transition.duration) {
+			if (transition.win === true) {
+				level++;
+			} else {
+				level = 1;
+			}
 			newLevel();	
 		}
 	}
-	//updateWinCondition
+	//updateWinOrLoseCondition
 	if (mines.length == 0 && transition == null) {
 		transition = {};
 		transition.age = 0;
+		transition.win = true;
+		transition.duration = transitionWinTime;
+	}
+	if (player.health === 0 && transition == null) {
+		transition = {};
+		transition.age = 0;
+		transition.win = false;
+		transition.duration = transitionLoseTime;
 	}
 }
 
@@ -346,6 +366,7 @@ var triggerExpansion = function (pos) {
 		world.badness.set(x,y,0);
 		world.wall.set(x, y, -1);
 	});
+	world.wall.set(pos.x, pos.y, 0); //just to make the centre look different
 	var expansion = { pos: pos, age: 0};
 	expansions.push(expansion);
 }
@@ -414,9 +435,15 @@ var updatePlayer = function() {
 	}
 	if (world.badness.get(player.pos.x, player.pos.y) > 0) {
 		player.health--;
-		if (player.health < 0) {
+		player.flashing++;
+		if (player.health <= 0) {
 			player.health = 0;
+			player.flashing = 0;
+			player.hidden = true;
+			triggerExpansion(player.pos);
 		}
+	} else {
+		player.flashing = 0;
 	}
 }
 
