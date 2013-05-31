@@ -303,16 +303,11 @@ var drawBar = function(row, current, max, foreColor, backColor) {
 
 // The main game loop
 var main = function () {
-	var now = Date.now();
-	var delta = now - then;
-
-	update(delta / 1000);
+	update();
 	render();
-
-	then = now;
 };
 
-var update = function (delta) {
+var update = function () {
 	updatePlayer();
 	updateBadness();
 	updateExpansions();
@@ -482,5 +477,4 @@ var updatePlayer = function() {
 	}
 }
 
-var then = Date.now();
 setInterval(main, 1000 / 60);
