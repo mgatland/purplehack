@@ -25,7 +25,7 @@ var badnessOverWalls = "#39A4BA";
 var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
 
-var transitionTime = 60; //number of transition frames between levels.
+var transitionTime = 90; //number of transition frames between levels.
 
 canvas.width = width*pixelSize;
 canvas.height = (height+3)*pixelSize;
@@ -205,8 +205,7 @@ var render = function () {
 		drawPixel(mine.pos.x, mine.pos.y, yellow1);
 	});
 
-	var currentPlayerColor = (player.health > 0) ? playerColor : "rgb(0,0,0)";
-	drawPixel(player.pos.x, player.pos.y, currentPlayerColor);
+	drawPlayer();
 
 	drawTransition();
 
@@ -214,13 +213,41 @@ var render = function () {
 	drawBar(2, numMines - mines.length, numMines, yellow1, purple3);
 };
 
+var drawPlayer = function() {
+	if (player.hidden) {
+		return;
+	}
+	var currentPlayerColor = (player.health > 0) ? playerColor : "rgb(0,0,0)";
+	drawPixel(player.pos.x, player.pos.y, currentPlayerColor);
+}
+
+var forEveryCellInTeleportAnimation = function(pos, frame, func) {
+	for (var j = -1; j <= 1; j++) {
+		var xOffset = frame;
+		xOffset -= Math.abs(j) * 2;
+		var width = Math.min(4, xOffset+1);
+		for (var i = 0; i < width; i++) {
+			func(pos.x - xOffset + i, pos.y + j);
+			func(pos.x + xOffset - i, pos.y + j);	
+		}
+	}
+}
+
 var drawTransition = function() {
 	if (transition == null) {
 		return;
 	}
-	var radius = transition.age * 2;
-	forEveryCellInDiamond(transition.pos, radius, function(x, y) {
-		drawPixel(x, y, yellow1);
+	if (transition.age < 7) {
+		return;
+	}
+	if (transition.age == 7) {
+		player.hidden = true;
+		transition.pos = player.pos;	
+	}
+	forEveryCellInTeleportAnimation(transition.pos, transition.age - 7, function(x, y) {
+		if (world.wall.isValid(x, y)) {
+			drawPixel(x, y, yellow1);	
+		}
 	});
 }
 
@@ -258,7 +285,6 @@ var update = function (delta) {
 	//updateWinCondition
 	if (mines.length == 0 && transition == null) {
 		transition = {};
-		transition.pos = player.pos;
 		transition.age = 0;
 	}
 }
