@@ -30,7 +30,7 @@ var transitionWinTime = 90;
 var transitionLoseTime = 90;
 
 canvas.width = width*pixelSize;
-canvas.height = (height+3)*pixelSize;
+canvas.height = (height+2)*pixelSize;
 document.body.appendChild(canvas);
 
 //to integer	
@@ -216,7 +216,6 @@ var render = function () {
 	drawTransition();
 
 	drawBar(1, player.health, maxHealth, playerColor, purple3);
-	drawBar(2, numMines - mines.length, numMines, yellow1, purple3);
 };
 
 var drawPlayer = function() {
