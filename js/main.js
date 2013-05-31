@@ -8,7 +8,7 @@ var ctx = canvas.getContext("2d");
 var pixelSize = 16;
 var width = 32;
 var height = width;
-var maxBadness = 120; //number of frames it takes for badness to capture a cell.
+var normalTimeToGrowBadness = 120; //number of frames it takes for badness to capture a cell.
 var numMines = 26;
 var explosionRadius = 7;
 var maxHealth = 120; //frames it takes to die when standing in goop
@@ -21,9 +21,10 @@ var purple1 = "#c50080";
 var purple2 = "#800053";
 var purple3 = "#571C43";
 
-var green1 = "#25d500";
+var green1 = "#fff";
 var green2 = "#3DA028";
 var green3 = "#59EA3A";
+var badnessOverWalls = "#39A4BA";
 
 var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
@@ -171,10 +172,14 @@ var render = function () {
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
 	
 	forEachCell(world, function (world, x, y) {
-		if (world.badness.get(x, y) >= maxBadness) {
+		if (world.badness.get(x, y) >= maxBadnessAt(x, y)) {
 			drawPixel(x, y, green2);
 		} else if (world.badness.get(x, y) > 0) {
-			drawPixel(x, y, green3);
+			if (isSpace(x, y)) {
+				drawPixel(x, y, green3);
+			} else {
+				drawPixel(x, y, badnessOverWalls);
+			}
 		} else if (world.wall.get(x, y) > 0) {
 			drawPixel(x, y, purple1);
 		} else if (world.wall.get(x, y) == -1) {
@@ -231,9 +236,20 @@ var removeFromArray = function(element, array) {
 
 var spreadBadnessInto = function(badness, pos) {
 	var currentBadness = badness.get(pos.x, pos.y);
-	if (currentBadness == 0 && world.wall.get(pos.x, pos.y) <= 0) {
-		badness.set(pos.x, pos.y, 1 + rnd(maxBadness / 2));
+	if (currentBadness == 0) {
+		badness.set(pos.x, pos.y, 1 + rnd(normalTimeToGrowBadness / 2));
 	}
+}
+
+var isSpace = function(x, y) {
+	return (world.wall.get(x, y) <= 0);
+}
+
+var maxBadnessAt = function(x, y) {
+	if (isSpace(x, y)) {
+		return normalTimeToGrowBadness;
+	}
+	return normalTimeToGrowBadness * 5;
 }
 
 var updateBadness = function() {
@@ -241,7 +257,7 @@ var updateBadness = function() {
 		var currentBadness = badness.get(x,y);
 
 		if (currentBadness > 0) {
-			if (currentBadness < maxBadness) {
+			if (currentBadness < maxBadnessAt(x, y)) {
 				badness.set(x, y, currentBadness + 1);
 			} else {
 				var above = {x: x, y: y - 1};
@@ -322,7 +338,7 @@ var updatePlayer = function() {
 		}	
 
 		if (newPos != null) {
-			if (world.wall.isValid(newPos.x, newPos.y) && world.wall.get(newPos.x, newPos.y) != 1) {
+			if (world.wall.isValid(newPos.x, newPos.y)) {
 				player.pos = newPos;
 				player.moveTimer = player.moveDelay;
 				//did we step on a mine?
