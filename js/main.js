@@ -455,6 +455,7 @@ var updatePlayer = function() {
 	}
 	if (player.hidden) {
 		player.flashing = 0;
+		soundUtil.stopBuzz();
 		return;
 	}
 	if (player.moveTimer == 0) {
@@ -490,28 +491,29 @@ var updatePlayer = function() {
 	}
 	if (world.badness.get(player.pos.x, player.pos.y) > 0) {
 		player.health--;
-		player.flashing++;
 		if (player.health <= 0) {
 			player.health = 0;
 			player.flashing = 0;
+			soundUtil.stopBuzz();
 			player.hidden = true;
 			triggerExpansion(player.pos);
+		} else {
+			player.flashing++;
+			soundUtil.playBuzz();
 		}
 	} else {
 		player.flashing = 0;
+		soundUtil.stopBuzz();
 	}
 }
 
 var SoundUtil = function() {
 	var audioContext;
 	var explodeSound;
+	var buzzSound;
 	var audioEnabled = true;
 	var muted = false;
 	var music;
-
-	this.playExplodeSound = function() {
-		play(explodeSound);
-	}
 
 	var audio = new Audio();
 	var mp3Support = audio.canPlayType("audio/mpeg");
@@ -529,8 +531,41 @@ var SoundUtil = function() {
 
 	music = new Audio("music/DJ DOS - LOOP (Creative Commons Attribution-Share Alike 3.0)" + extension); 
 	explodeSound = new Audio("sounds/thump" + extension);
-
+	buzzSound = new Audio("sounds/buzz" + extension);
 	music.loop = true;
+
+	function play(sound) {
+		if (muted) {
+			return;
+		}
+		if (sound.duration > 0 && !sound.paused) {
+			sound.pause();
+			sound.currentTime = 0;
+		}
+		sound.play();
+	}
+
+	this.playExplodeSound = function() {
+		play(explodeSound);
+	}
+
+	this.playBuzz = function() {
+		if (muted) {
+			return;
+		}
+		if (buzzSound.duration > 0 && !buzzSound.paused) {
+			//ignore, already playing
+		} else {
+			buzzSound.play();
+		}
+	}
+
+	this.stopBuzz = function() {
+		if (buzzSound.duration > 0 && !buzzSound.paused) {
+			buzzSound.pause();
+			buzzSound.currentTime = 0;
+		}
+	}
 
 	this.playMusic = function() {
 		music.play();
@@ -543,18 +578,8 @@ var SoundUtil = function() {
 		} else {
 			muted = true;
 			music.pause();
+			this.stopBuzz();
 		}
-	}
-
-	function play(sound) {
-		if (muted) {
-			return;
-		}
-		if (sound.duration > 0 && !sound.paused) {
-			sound.pause();
-			sound.currentTime = 0;
-		}
-		sound.play();
 	}
 }
 
