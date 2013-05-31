@@ -71,7 +71,6 @@ var mines;
 var level;
 var transition;
 
-var music;
 var optionKeyTimer = 0;
 
 var createGrid = function () {
@@ -314,11 +313,7 @@ var updateOptionKeys = function () {
 	if (optionKeyTimer == 0) {
 		if (keysDown[KeyEvent.DOM_VK_M] === true) {
 			optionKeyTimer = optionKeyDelay;
-			if (music.paused) {
-				music.play();			
-			} else {
-				music.pause();
-			}
+			soundUtil.toggleMute();
 		}
 	}
 }
@@ -424,6 +419,7 @@ var triggerExpansion = function (pos) {
 	world.wall.set(pos.x, pos.y, 0); //just to make the centre look different
 	var expansion = { pos: pos, age: 0};
 	expansions.push(expansion);
+	soundUtil.playExplodeSound();
 }
 
 var forEveryCellInDiamond = function (pos, bigRadius, func) {
@@ -455,6 +451,10 @@ var updateExpansions = function() {
 var updatePlayer = function() {
 
 	if (player.health === 0) {
+		return;
+	}
+	if (player.hidden) {
+		player.flashing = 0;
 		return;
 	}
 	if (player.moveTimer == 0) {
@@ -502,22 +502,56 @@ var updatePlayer = function() {
 	}
 }
 
-var playMusic = function() {
+var SoundUtil = function() {
+	var audioContext;
+	var explodeSound;
+	var audioEnabled = true;
+	var muted = false;
+	var music;
+
+	this.playExplodeSound = function() {
+		play(explodeSound);
+	}
 
 	var audio = new Audio();
 	var mp3Support = audio.canPlayType("audio/mpeg");
 	var oggSupport = audio.canPlayType("audio/ogg");
+
 	if(mp3Support == "probably" || mp3Support == "maybe") {
 	   music = new Audio('music/DJ DOS - LOOP (Creative Commons  Attribution-Share Alike 3.0) - 40b.mp3'); 
+	   explodeSound = new Audio("sounds/thump.mp3");
 	} else if(oggSupport == "probably" || oggSupport == "maybe") {
 	   music = new Audio('music/DJ DOS - LOOP (Creative Commons  Attribution-Share Alike 3.0) - quality 3.ogg'); 
+	   explodeSound = new Audio("sounds/thump.ogg");
 	} else {
 		console.log("I don't think this browser can play our music.");
 		return;
 	}
 	music.loop = true;
-	music.play();	
+
+	this.playMusic = function() {
+		music.play();
+	}
+
+	this.toggleMute = function() {
+		if (muted) {
+			muted = false;
+			music.play();			
+		} else {
+			muted = true;
+			music.pause();
+		}
+	}
+
+	function play(sound) {
+		if (sound.duration > 0 && !sound.paused) {
+			sound.pause();
+			sound.currentTime = 0;
+		}
+		sound.play();
+	}
 }
 
+var soundUtil = new SoundUtil();
+soundUtil.playMusic();
 setInterval(main, 1000 / 60);
-playMusic();
