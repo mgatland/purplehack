@@ -516,17 +516,20 @@ var SoundUtil = function() {
 	var audio = new Audio();
 	var mp3Support = audio.canPlayType("audio/mpeg");
 	var oggSupport = audio.canPlayType("audio/ogg");
+	var extension;
 
 	if(mp3Support == "probably" || mp3Support == "maybe") {
-	   music = new Audio('music/DJ DOS - LOOP (Creative Commons  Attribution-Share Alike 3.0) - 40b.mp3'); 
-	   explodeSound = new Audio("sounds/thump.mp3");
+		extension = ".mp3";
 	} else if(oggSupport == "probably" || oggSupport == "maybe") {
-	   music = new Audio('music/DJ DOS - LOOP (Creative Commons  Attribution-Share Alike 3.0) - quality 3.ogg'); 
-	   explodeSound = new Audio("sounds/thump.ogg");
+		extension = ".ogg";
 	} else {
 		console.log("I don't think this browser can play our music.");
 		return;
 	}
+
+	music = new Audio("music/DJ DOS - LOOP (Creative Commons Attribution-Share Alike 3.0)" + extension); 
+	explodeSound = new Audio("sounds/thump" + extension);
+
 	music.loop = true;
 
 	this.playMusic = function() {
@@ -544,6 +547,9 @@ var SoundUtil = function() {
 	}
 
 	function play(sound) {
+		if (muted) {
+			return;
+		}
 		if (sound.duration > 0 && !sound.paused) {
 			sound.pause();
 			sound.currentTime = 0;
