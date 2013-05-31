@@ -173,7 +173,7 @@ var mineAt = function (x, y) {
 	return foundMine;
 }
 
-level = 34;
+level = 1;
 newLevel();
 
 // Handle keyboard controls
