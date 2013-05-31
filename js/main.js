@@ -32,9 +32,11 @@ var oldLevelColor = burnedBackgroundColor;
 var transitionWinTime = 90;
 var transitionLoseTime = 160;
 
+var optionKeyDelay = 45;
+
 canvas.width = width*pixelSize;
 canvas.height = (height+6)*pixelSize;
-document.body.appendChild(canvas);
+document.getElementById('gameframe').appendChild(canvas);
 
 //to integer	
 var toInt = function (value) { return ~~value; }
@@ -52,7 +54,8 @@ if (typeof KeyEvent == "undefined") {
         DOM_VK_LEFT: 37,
         DOM_VK_UP: 38,
         DOM_VK_RIGHT: 39,
-        DOM_VK_DOWN: 40
+        DOM_VK_DOWN: 40,
+        DOM_VK_M: 77
     }
 }
 
@@ -67,6 +70,9 @@ var world;
 var mines;
 var level;
 var transition;
+
+var music;
+var optionKeyTimer = 0;
 
 var createGrid = function () {
 	var gridData = [];
@@ -301,6 +307,22 @@ var drawBar = function(row, current, max, foreColor, backColor) {
 	ctx.fillRect(0,(height+row)*pixelSize, toInt(current*width/max)*pixelSize, 1*pixelSize);
 }
 
+var updateOptionKeys = function () {
+	if (optionKeyTimer > 0) {
+		optionKeyTimer--;
+	}
+	if (optionKeyTimer == 0) {
+		if (keysDown[KeyEvent.DOM_VK_M] === true) {
+			optionKeyTimer = optionKeyDelay;
+			if (music.paused) {
+				music.play();			
+			} else {
+				music.pause();
+			}
+		}
+	}
+}
+
 // The main game loop
 var main = function () {
 	update();
@@ -337,6 +359,9 @@ var update = function () {
 		transition.win = false;
 		transition.duration = transitionLoseTime;
 	}
+
+	//update music toggle
+	updateOptionKeys();
 }
 
 var removeFromArray = function(element, array) {
@@ -480,7 +505,6 @@ var updatePlayer = function() {
 var playMusic = function() {
 
 	var audio = new Audio();
-	var music;
 	var mp3Support = audio.canPlayType("audio/mpeg");
 	var oggSupport = audio.canPlayType("audio/ogg");
 	if(mp3Support == "probably" || mp3Support == "maybe") {
