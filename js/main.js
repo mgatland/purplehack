@@ -13,21 +13,21 @@ var maxHealth = 120; //frames it takes to die when standing in goop
 var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
-var purple1 = "#c50080";
-var purple2 = "#800053";
-var purple3 = "#571C43";
+var wallColor = "#A00068";
+var backgroundColor = "#800053";
+var burnedBackgroundColor = "#571C43";
 
-var playerColor = "#fff";
-var badnessColor = "#3DA028";
-var badnessFlashColor = "#9A9D9A";
-var green3 = "#59EA3A";
-var badnessOverWalls = "#39A4BA";
+var playerColor = "#B4FFA3";
 
-var yellow1 = "#FFF800";
-var yellow2 = "#BFBC30";
+var badnessColor = "#4281FF";
+var badnessOverSpace = "#5559C9";
+var badnessOverWalls = "#996DFF";
+var badnessFlashColor = badnessOverWalls;
 
-var grey = "#939061";
-var darkGrey = "#44432D";
+var mineColor = "#FFCC02";
+
+var levelColor = wallColor;
+var oldLevelColor = burnedBackgroundColor;
 
 var transitionWinTime = 90;
 var transitionLoseTime = 160;
@@ -194,7 +194,7 @@ var drawPixel = function (x, y, color) {
 
 // Draw everything
 var render = function () {
-	ctx.fillStyle = purple2;
+	ctx.fillStyle = backgroundColor;
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
 	
 	forEachCell(world, function (world, x, y) {
@@ -206,31 +206,31 @@ var render = function () {
 			drawPixel(x, y, color);
 		} else if (world.badness.get(x, y) > 0) {
 			if (isSpace(x, y)) {
-				drawPixel(x, y, green3);
+				drawPixel(x, y, badnessOverSpace);
 			} else {
 				drawPixel(x, y, badnessOverWalls);
 			}
 		} else if (world.wall.get(x, y) > 0) {
-			drawPixel(x, y, purple1);
+			drawPixel(x, y, wallColor);
 		} else if (world.wall.get(x, y) == -1) {
-			drawPixel(x, y, purple3);
+			drawPixel(x, y, burnedBackgroundColor);
 		}
 	});
 
 	mines.forEach(function (mine) {
-		drawPixel(mine.pos.x, mine.pos.y, yellow1);
+		drawPixel(mine.pos.x, mine.pos.y, mineColor);
 	});
 
 	drawPlayer();
 
 	drawTransition();
 
-	drawBar(1, player.health, maxHealth, playerColor, purple3);
+	drawBar(1, player.health, maxHealth, playerColor, burnedBackgroundColor);
 
 	ctx.fillStyle = "#000";
 	ctx.fillRect(0,(height+3)*pixelSize, width*pixelSize, 3*pixelSize);
-	drawDots(3, highestLevel, darkGrey);
-	drawDots(3, level, grey);
+	drawDots(3, highestLevel, oldLevelColor);
+	drawDots(3, level, levelColor);
 
 };
 
@@ -269,7 +269,7 @@ var drawTransition = function() {
 	}
 	forEveryCellInTeleportAnimation(transition.pos, transition.age - 7, function(x, y) {
 		if (world.wall.isValid(x, y)) {
-			drawPixel(x, y, yellow1);	
+			drawPixel(x, y, playerColor);	
 		}
 	});
 }
