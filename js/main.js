@@ -477,4 +477,23 @@ var updatePlayer = function() {
 	}
 }
 
+var playMusic = function() {
+
+	var audio = new Audio();
+	var music;
+	var mp3Support = audio.canPlayType("audio/mpeg");
+	var oggSupport = audio.canPlayType("audio/ogg");
+	if(mp3Support == "probably" || mp3Support == "maybe") {
+	   music = new Audio('music/DJ DOS - LOOP (Creative Commons  Attribution-Share Alike 3.0) - 40b.mp3'); 
+	} else if(oggSupport == "probably" || oggSupport == "maybe") {
+	   music = new Audio('music/DJ DOS - LOOP (Creative Commons  Attribution-Share Alike 3.0) - quality 3.ogg'); 
+	} else {
+		console.log("I don't think this browser can play our music.");
+		return;
+	}
+	music.loop = true;
+	music.play();	
+}
+
 setInterval(main, 1000 / 60);
+playMusic();
