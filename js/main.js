@@ -249,11 +249,11 @@ var drawPlayer = function() {
 var forEveryCellInTeleportAnimation = function(pos, frame, func) {
 	for (var j = -1; j <= 1; j++) {
 		var xOffset = frame;
-		xOffset -= Math.abs(j) * 2;
-		var width = Math.min(4, xOffset+1);
+		xOffset -= Math.abs(j);
+		var width = Math.min(3, xOffset+1);
 		for (var i = 0; i < width; i++) {
 			func(pos.x - xOffset + i, pos.y + j);
-			func(pos.x + xOffset - i, pos.y + j);	
+			func(pos.x + xOffset - i, pos.y + j);		
 		}
 	}
 }
