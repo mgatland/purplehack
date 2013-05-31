@@ -26,11 +26,14 @@ var badnessOverWalls = "#39A4BA";
 var yellow1 = "#FFF800";
 var yellow2 = "#BFBC30";
 
+var grey = "#939061";
+var darkGrey = "#44432D";
+
 var transitionWinTime = 90;
 var transitionLoseTime = 90;
 
 canvas.width = width*pixelSize;
-canvas.height = (height+2)*pixelSize;
+canvas.height = (height+6)*pixelSize;
 document.body.appendChild(canvas);
 
 //to integer	
@@ -53,6 +56,8 @@ if (typeof KeyEvent == "undefined") {
     }
 }
 
+// persisted state:
+var highestLevel = 0;
 
 // game state:
 var expansions; //a list of mine expanders {pos {x, y}, age }
@@ -103,6 +108,11 @@ var createGrid = function () {
 }
 
 var newLevel = function() {
+
+	if (level > highestLevel) {
+		highestLevel = level;
+	}
+
 	expansions = [];
 	player = {pos: {}};
 	numMines = level;
@@ -163,7 +173,7 @@ var mineAt = function (x, y) {
 	return foundMine;
 }
 
-level = 1;
+level = 34;
 newLevel();
 
 // Handle keyboard controls
@@ -216,6 +226,12 @@ var render = function () {
 	drawTransition();
 
 	drawBar(1, player.health, maxHealth, playerColor, purple3);
+
+	ctx.fillStyle = "#000";
+	ctx.fillRect(0,(height+3)*pixelSize, width*pixelSize, 3*pixelSize);
+	drawDots(3, highestLevel, darkGrey);
+	drawDots(3, level, grey);
+
 };
 
 var drawPlayer = function() {
@@ -256,6 +272,26 @@ var drawTransition = function() {
 			drawPixel(x, y, yellow1);	
 		}
 	});
+}
+
+var drawDots = function(row, value, foreColor, backColor) {
+	ctx.fillStyle = foreColor;
+	for (var n = 0; n < value; n++) {
+		ctx.fillRect(n*2*pixelSize, (height+row)*pixelSize, pixelSize, pixelSize);
+	}
+	if (value * 2 > width) {
+		//draw another row
+		for (var n = 0; n < value - toInt(width/2); n++) {
+				ctx.fillRect((1+n*2)*pixelSize, (height+row+1)*pixelSize, pixelSize, pixelSize);
+		}
+	}
+
+	if (value * 3 > width) {
+		//draw another row
+		for (var n = 0; n < value - toInt(width); n++) {
+				ctx.fillRect((n*2)*pixelSize, (height+row+2)*pixelSize, pixelSize, pixelSize);
+		}
+	}
 }
 
 var drawBar = function(row, current, max, foreColor, backColor) {
