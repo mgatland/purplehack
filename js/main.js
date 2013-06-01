@@ -30,13 +30,10 @@ var levelColor = wallColor;
 var oldLevelColor = burnedBackgroundColor;
 
 var transitionWinTime = 90;
-var transitionLoseTime = 160;
+var transitionLoseTime = 60*18;
+var transitionCanSkipAfter = 90;
 
 var optionKeyDelay = 45;
-
-canvas.width = width*pixelSize;
-canvas.height = (height+6)*pixelSize;
-document.getElementById('gameframe').appendChild(canvas);
 
 //to integer	
 var toInt = function (value) { return ~~value; }
@@ -45,6 +42,53 @@ var toInt = function (value) { return ~~value; }
 var rnd = function (range) {
 	return Math.floor(Math.random()*range);
 }
+
+
+var canvas2 = document.createElement("canvas");
+var ctx2 = canvas2.getContext("2d");
+canvas2.width = width*pixelSize;
+canvas2.height = (height+6)*pixelSize;
+document.getElementById('overlay').appendChild(canvas2);
+
+var noiseData = [];
+for (var i = 0; i < 10; i++) {
+	noiseData[i] = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
+}
+var noiseFrame = 0;
+var noiseCounter = 0;
+
+var generateNoise = function() {
+	for (var frame=0; frame < noiseData.length; frame++) {
+		var frameNoise = noiseData[frame];
+		for (var i=0;i<frameNoise.data.length;i+=4) {
+			var brightness = rnd(256);
+			frameNoise.data[i]=brightness;
+			frameNoise.data[i+1]=brightness;
+			frameNoise.data[i+2]=brightness;
+			frameNoise.data[i+3]=rnd(30);
+		}
+	}
+}
+
+var drawNoise = function() {
+	noiseCounter++;
+	if (noiseCounter < 10) {
+		return;
+	}
+	noiseCounter = 0;
+	noiseFrame++;
+	if (noiseFrame == noiseData.length) {
+		noiseFrame = 0;
+	}
+	ctx2.putImageData(noiseData[noiseFrame],0,0);
+}
+
+generateNoise();
+
+canvas.width = width*pixelSize;
+canvas.height = (height+6)*pixelSize;
+document.getElementById('gameframe').appendChild(canvas);
+
 
 if (typeof KeyEvent == "undefined") {
     var KeyEvent = {
@@ -199,6 +243,8 @@ var drawPixel = function (x, y, color) {
 
 // Draw everything
 var render = function () {
+	drawNoise();
+
 	ctx.fillStyle = backgroundColor;
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
 	
@@ -330,6 +376,19 @@ var main = function () {
 	render();
 };
 
+var anyKeysDown = function() {
+		if (keysDown[KeyEvent.DOM_VK_LEFT] === true ||
+			keysDown[KeyEvent.DOM_VK_RIGHT] === true ||
+			keysDown[KeyEvent.DOM_VK_UP] === true ||
+			keysDown[KeyEvent.DOM_VK_DOWN] === true ||
+			keysDown[KeyEvent.DOM_VK_SPACE] === true ||
+			keysDown[KeyEvent.DOM_VK_ENTER] === true ||
+			keysDown[KeyEvent.DOM_VK_RETURN] === true) {
+			return true;
+		}
+		return false;
+}
+
 var update = function () {
 	updatePlayer();
 	updateBadness();
@@ -338,6 +397,15 @@ var update = function () {
 	//updateTransition
 	if (transition != null) {
 		transition.age++;
+
+		//optionally skip the lose transition
+
+		if (transition.age > transitionCanSkipAfter) {
+			if (anyKeysDown()) {
+				transition.age = transition.duration;	
+			}
+		}
+
 		if (transition.age == transition.duration) {
 			if (transition.win === true) {
 				level++;
