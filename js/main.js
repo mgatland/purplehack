@@ -9,6 +9,7 @@ var width = 32;
 var height = width;
 var normalTimeToGrowBadness = 120; //number of frames it takes for badness to capture a cell.
 var explosionRadius = 7;
+var playerExplosionRadius = 5;
 var maxHealth = 120; //frames it takes to die when standing in goop
 var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
 
@@ -29,6 +30,8 @@ var badnessOverWalls = "#996DFF";
 var badnessFlashColor = badnessOverWalls;
 
 var mineColor = "#FFCC02";
+var expansionColor = "#4C3E8E"; //mine color blended with background color
+var expansionFlashTime = 4;
 
 var levelColor = wallColor;
 var oldLevelColor = burnedBackgroundColor;
@@ -283,6 +286,8 @@ var render = function () {
 		drawPixel(mine.pos.x, mine.pos.y, mineColor);
 	});
 
+	drawExpansions();
+
 	drawPlayer();
 
 	drawEndTransition();
@@ -296,6 +301,18 @@ var render = function () {
 	drawDots(3, level, levelColor);
 
 };
+
+var drawExpansions = function() {
+	expansions.forEach(function (expansion) {
+		if (expansion.age < expansion.flashTime) {
+			forEveryCellInDiamond(expansion.pos, expansion.radius, function(x, y) {
+				if (world.wall.isValid(x,y)) {
+					drawPixel(x, y, expansion.color);	
+				}
+			});
+		}
+	});
+}
 
 var drawPlayer = function() {
 	if (player.hidden) {
@@ -549,14 +566,21 @@ var updateBadness = function() {
 
 
 
-var triggerExpansion = function (pos) {
+var triggerExpansion = function (pos, isPlayer) {
+	var expansion = { pos: pos, age: 0, radius: explosionRadius, color: expansionColor, flashTime: expansionFlashTime};
+	if (isPlayer === true) {
+		expansion.color = playerColor;
+		expansion.flashTime *= 2;
+		expansion.radius = playerExplosionRadius;
+	}
+
 	//clear goop and walls from expansion area
-	forEveryCellInDiamond(pos, explosionRadius, function(x, y) {
+	forEveryCellInDiamond(pos, expansion.radius, function(x, y) {
 		world.badness.set(x,y,0);
 		world.wall.set(x, y, -1);
 	});
 	world.wall.set(pos.x, pos.y, 0); //just to make the centre look different
-	var expansion = { pos: pos, age: 0};
+
 	expansions.push(expansion);
 }
 
@@ -577,7 +601,7 @@ var updateExpansions = function() {
 
 		//clear goop - this is a bit weird, we could've put this logic in the goop spread code
 		//todo: duplicate code
-		forEveryCellInDiamond(expansion.pos, explosionRadius, function(x, y) {
+		forEveryCellInDiamond(expansion.pos, expansion.radius, function(x, y) {
 			world.badness.set(x,y,0);
 		});
 		if (expansion.age == maxExpansionAge) {
@@ -635,7 +659,7 @@ var updatePlayer = function() {
 			player.flashing = 0;
 			soundUtil.stopBuzz();
 			player.hidden = true;
-			triggerExpansion(player.pos);
+			triggerExpansion(player.pos, true);
 			soundUtil.playExplodeSound();
 		} else {
 			player.flashing++;
