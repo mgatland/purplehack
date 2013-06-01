@@ -582,6 +582,7 @@ var SoundUtil = function() {
 	}
 
 	this.playMusic = function() {
+		music.loop = true;
 		music.play();
 	}
 
