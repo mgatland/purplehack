@@ -50,6 +50,8 @@ var rnd = function (range) {
 	return Math.floor(Math.random()*range);
 }
 
+
+
 var canvas2 = document.createElement("canvas");
 var ctx2 = canvas2.getContext("2d");
 canvas2.width = width*pixelSize;
@@ -94,6 +96,9 @@ generateNoise();
 canvas.width = width*pixelSize;
 canvas.height = (height+6)*pixelSize;
 document.getElementById('gameframe').appendChild(canvas);
+
+var gameElement = document.getElementById('game');
+gameElement.setAttribute("style","width:" + canvas.width + "px; height:" + canvas.height + "px");
 
 
 if (typeof KeyEvent == "undefined") {
