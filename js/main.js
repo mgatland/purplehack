@@ -49,48 +49,13 @@ var rnd = function (range) {
 	return Math.floor(Math.random()*range);
 }
 
-
-
 var canvas2 = document.createElement("canvas");
 var ctx2 = canvas2.getContext("2d");
 canvas2.width = width*pixelSize;
 canvas2.height = (height+6)*pixelSize;
 document.getElementById('overlay').appendChild(canvas2);
 
-var noiseData = [];
-for (var i = 0; i < 6; i++) {
-	noiseData[i] = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
-}
-var noiseFrame = 0;
-var noiseCounter = 0;
-
-var generateNoise = function() {
-	for (var frame=0; frame < noiseData.length; frame++) {
-		var frameNoise = noiseData[frame];
-		for (var i=0;i<frameNoise.data.length;i+=4) {
-			var brightness = rnd(256);
-			frameNoise.data[i]=brightness;
-			frameNoise.data[i+1]=brightness;
-			frameNoise.data[i+2]=brightness;
-			frameNoise.data[i+3]=rnd(30);
-		}
-	}
-}
-
-var drawNoise = function() {
-	noiseCounter++;
-	if (noiseCounter < 10) {
-		return;
-	}
-	noiseCounter = 0;
-	noiseFrame++;
-	if (noiseFrame == noiseData.length) {
-		noiseFrame = 0;
-	}
-	ctx2.putImageData(noiseData[noiseFrame],0,0);
-}
-
-generateNoise();
+var overlay = new Overlay();
 
 canvas.width = width*pixelSize;
 canvas.height = (height+6)*pixelSize;
@@ -109,7 +74,8 @@ if (typeof KeyEvent == "undefined") {
         DOM_VK_UP: 38,
         DOM_VK_RIGHT: 39,
         DOM_VK_DOWN: 40,
-        DOM_VK_M: 77
+        DOM_VK_M: 77,
+		DOM_VK_O: 79
     }
 }
 
@@ -261,7 +227,7 @@ var drawPixel = function (x, y, color) {
 
 // Draw everything
 var render = function () {
-	drawNoise();
+	overlay.draw();
 
 	ctx.fillStyle = backgroundColor;
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
@@ -432,6 +398,10 @@ var updateOptionKeys = function () {
 		if (keysDown[KeyEvent.DOM_VK_M] === true) {
 			optionKeyTimer = optionKeyDelay;
 			soundUtil.toggleMute();
+		}
+		if (keysDown[KeyEvent.DOM_VK_O] === true) {
+			optionKeyTimer = optionKeyDelay;
+			overlay.switchMode();
 		}
 	}
 }
