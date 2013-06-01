@@ -12,7 +12,8 @@ var explosionRadius = 7;
 var maxHealth = 120; //frames it takes to die when standing in goop
 var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
 
-var screenWipeDuration = 6;
+var screenWipeDurationWinning = 6;
+var screenWipeDurationLosing = 16;
 var blankBetweenLevelTime = 16;
 
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
@@ -182,6 +183,11 @@ var newLevel = function() {
 	endTransition = null;
 	startTransition = {};
 	startTransition.age = 0;
+	if (level == 1) {
+		startTransition.win = false;
+	} else {
+		startTransition.win = true;
+	}
 
 	forEachCell(world.wall, function(grid, x, y) {
 		if (rnd(10) > 7) {
@@ -310,9 +316,9 @@ var forEveryCellInTeleportAnimation = function(pos, frame, func) {
 	}
 }
 
-var drawScreenWipe = function (frame) {
+var drawScreenWipe = function (frame, duration) {
 	//wipe across the screen
-	var column = toInt(frame / (screenWipeDuration) * width);
+	var column = toInt(frame / (duration) * width);
 	if (column > width) {
 		column = width;
 	}
@@ -320,9 +326,9 @@ var drawScreenWipe = function (frame) {
 	ctx.fillRect(0*pixelSize,0*pixelSize, (column+1)*pixelSize, height*pixelSize);
 }
 
-var drawScreenUnwipe = function (frame) {
+var drawScreenUnwipe = function (frame, duration) {
 	//wipe across the screen
-	var column = toInt(frame / (screenWipeDuration) * width);
+	var column = toInt(frame / (duration) * width);
 	if (column > width) {
 		column = width;
 	}
@@ -335,7 +341,7 @@ var drawStartTransition = function() {
 		return;
 	}
 
-	drawScreenUnwipe(startTransition.age);
+	drawScreenUnwipe(startTransition.age, screenWipeDuration(startTransition));
 }
 
 var drawEndTransition = function() {
@@ -343,9 +349,9 @@ var drawEndTransition = function() {
 		return;
 	}
 
-	var screenWipeFrame = endTransition.age - (endTransition.duration - screenWipeDuration - blankBetweenLevelTime);
+	var screenWipeFrame = endTransition.age - (endTransition.duration - screenWipeDuration(endTransition) - blankBetweenLevelTime);
 	if (screenWipeFrame > 0) {
-		drawScreenWipe(screenWipeFrame);
+		drawScreenWipe(screenWipeFrame, screenWipeDuration(endTransition));
 	}
 
 	if (endTransition.win === true) {
@@ -428,6 +434,18 @@ var anyKeysDown = function() {
 		return false;
 }
 
+var screenWipeDuration = function(transition) {
+	if (transition.win === true) {
+		return screenWipeDurationWinning;
+	} else {
+		return screenWipeDurationLosing;
+	}
+}
+
+var startOfScreenWipe = function(transition) {
+	return transition.duration - screenWipeDuration(transition) - blankBetweenLevelTime;
+}
+
 var update = function () {
 	updatePlayer();
 	updateBadness();
@@ -436,7 +454,7 @@ var update = function () {
 	//updateTransition
 	if (startTransition != null) {
 		startTransition.age++;
-		if (startTransition.age == screenWipeDuration) {
+		if (startTransition.age == screenWipeDuration(startTransition)) {
 			startTransition = null;
 		}
 	}
@@ -446,9 +464,9 @@ var update = function () {
 
 		//optionally skip the lose transition
 		if (endTransition.age > transitionCanSkipAfter
-			&& endTransition.age < endTransition.duration - screenWipeDuration - blankBetweenLevelTime) {
+			&& endTransition.age < startOfScreenWipe(endTransition)) {
 			if (anyKeysDown()) {
-				endTransition.age = endTransition.duration - screenWipeDuration - blankBetweenLevelTime;	
+				endTransition.age = startOfScreenWipe(endTransition);	
 			}
 		}
 
