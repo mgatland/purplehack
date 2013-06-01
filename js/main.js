@@ -12,6 +12,9 @@ var explosionRadius = 7;
 var maxHealth = 120; //frames it takes to die when standing in goop
 var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
 
+var screenWipeDuration = 6;
+var blankBetweenLevelTime = 16;
+
 //colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var wallColor = "#A00068";
 var backgroundColor = "#800053";
@@ -43,7 +46,6 @@ var rnd = function (range) {
 	return Math.floor(Math.random()*range);
 }
 
-
 var canvas2 = document.createElement("canvas");
 var ctx2 = canvas2.getContext("2d");
 canvas2.width = width*pixelSize;
@@ -51,7 +53,7 @@ canvas2.height = (height+6)*pixelSize;
 document.getElementById('overlay').appendChild(canvas2);
 
 var noiseData = [];
-for (var i = 0; i < 10; i++) {
+for (var i = 0; i < 6; i++) {
 	noiseData[i] = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
 }
 var noiseFrame = 0;
@@ -113,7 +115,8 @@ var numMines;
 var world;
 var mines;
 var level;
-var transition;
+var endTransition;
+var startTransition;
 
 var optionKeyTimer = 0;
 
@@ -176,7 +179,9 @@ var newLevel = function() {
 	world.wall = createGrid();
 	world.badness = createGrid();
 
-	transition = null;
+	endTransition = null;
+	startTransition = {};
+	startTransition.age = 0;
 
 	forEachCell(world.wall, function(grid, x, y) {
 		if (rnd(10) > 7) {
@@ -274,7 +279,8 @@ var render = function () {
 
 	drawPlayer();
 
-	drawTransition();
+	drawEndTransition();
+	drawStartTransition();
 
 	drawBar(1, player.health, maxHealth, playerColor, burnedBackgroundColor);
 
@@ -304,25 +310,58 @@ var forEveryCellInTeleportAnimation = function(pos, frame, func) {
 	}
 }
 
-var drawTransition = function() {
-	if (transition == null) {
+var drawScreenWipe = function (frame) {
+	//wipe across the screen
+	var column = toInt(frame / (screenWipeDuration) * width);
+	if (column > width) {
+		column = width;
+	}
+	ctx.fillStyle = "#000";
+	ctx.fillRect(0*pixelSize,0*pixelSize, (column+1)*pixelSize, height*pixelSize);
+}
+
+var drawScreenUnwipe = function (frame) {
+	//wipe across the screen
+	var column = toInt(frame / (screenWipeDuration) * width);
+	if (column > width) {
+		column = width;
+	}
+	ctx.fillStyle = "#000";
+	ctx.fillRect(column*pixelSize,0*pixelSize, (width-column)*pixelSize, height*pixelSize);
+}
+
+var drawStartTransition = function() {
+	if (startTransition == null) {
 		return;
 	}
-	if (transition.age < 7) {
+
+	drawScreenUnwipe(startTransition.age);
+}
+
+var drawEndTransition = function() {
+	if (endTransition == null) {
 		return;
 	}
-	if (transition.win === false) {
-		return;
+
+	var screenWipeFrame = endTransition.age - (endTransition.duration - screenWipeDuration - blankBetweenLevelTime);
+	if (screenWipeFrame > 0) {
+		drawScreenWipe(screenWipeFrame);
 	}
-	if (transition.age == 7) {
-		player.hidden = true;
-		transition.pos = player.pos;	
-	}
-	forEveryCellInTeleportAnimation(transition.pos, transition.age - 7, function(x, y) {
-		if (world.wall.isValid(x, y)) {
-			drawPixel(x, y, playerColor);	
+
+	if (endTransition.win === true) {
+		if (endTransition.age == 7) {
+			player.hidden = true;
+			endTransition.pos = player.pos;	
 		}
-	});
+
+		if (endTransition.age >= 7) {
+			forEveryCellInTeleportAnimation(endTransition.pos, endTransition.age - 7, function(x, y) {
+				if (world.wall.isValid(x, y)) {
+					drawPixel(x, y, playerColor);	
+				}
+			});
+		}
+	}
 }
 
 var drawDots = function(row, value, foreColor, backColor) {
@@ -395,19 +434,26 @@ var update = function () {
 	updateExpansions();
 
 	//updateTransition
-	if (transition != null) {
-		transition.age++;
+	if (startTransition != null) {
+		startTransition.age++;
+		if (startTransition.age == screenWipeDuration) {
+			startTransition = null;
+		}
+	}
+
+	if (endTransition != null) {
+		endTransition.age++;
 
 		//optionally skip the lose transition
-
-		if (transition.age > transitionCanSkipAfter) {
+		if (endTransition.age > transitionCanSkipAfter
+			&& endTransition.age < endTransition.duration - screenWipeDuration - blankBetweenLevelTime) {
 			if (anyKeysDown()) {
-				transition.age = transition.duration;	
+				endTransition.age = endTransition.duration - screenWipeDuration - blankBetweenLevelTime;	
 			}
 		}
 
-		if (transition.age == transition.duration) {
-			if (transition.win === true) {
+		if (endTransition.age == endTransition.duration) {
+			if (endTransition.win === true) {
 				level++;
 			} else {
 				level = 1;
@@ -416,18 +462,18 @@ var update = function () {
 		}
 	}
 	//updateWinOrLoseCondition
-	if (mines.length == 0 && transition == null) {
-		transition = {};
-		transition.age = 0;
-		transition.win = true;
-		transition.duration = transitionWinTime;
+	if (mines.length == 0 && endTransition == null) {
+		endTransition = {};
+		endTransition.age = 0;
+		endTransition.win = true;
+		endTransition.duration = transitionWinTime;
 		soundUtil.playWinSound();
 	}
-	if (player.health === 0 && transition == null) {
-		transition = {};
-		transition.age = 0;
-		transition.win = false;
-		transition.duration = transitionLoseTime;
+	if (player.health === 0 && endTransition == null) {
+		endTransition = {};
+		endTransition.age = 0;
+		endTransition.win = false;
+		endTransition.duration = transitionLoseTime;
 	}
 
 	//update music toggle
