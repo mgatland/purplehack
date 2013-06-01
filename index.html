@@ -1,16 +1,32 @@
-<html>
+---
+published: "true"
+title: Tide
+layout: none
+categories: 
+  - games
+description: Can you do the impossible?
+order: 5
+date: 2013-06-01
+icon: "tide/tide-icon.png"
+---
+<html lang="en-US">
 <head>
+	<meta charset="UTF-8"/>
 	<link rel="stylesheet" href="css/main.css" />
+	<title>Tide &mdash; can you do the impossible?</title>
+	{% include analytics.html %}
 </head>
 <body>
 	<div id="game">
 		<div id="overlay"></div>
 		<div id="gameframe"></div>
 	</div>
-
-	<p>Use the arrow keys.</p>
-	<p>Music: <a href="http://www.jamendo.com/en/list/a86669/old-blood-vibrations-90-s">LOOP by DJ DOS</a></p>
-	<p>Damage sound based on <a href="http://freesound.org/people/dkustic/sounds/76213/">080925_00_grinder_metal.wav by dkustic</a></p>
+<p>Use the arrow keys.<br/>
+<br/>
+Music: <a href="http://www.jamendo.com/en/list/a86669/old-blood-vibrations-90-s">LOOP by DJ DOS</a><br/>
+Damage sound based on <a href="http://freesound.org/people/dkustic/sounds/76213/">grinder metal by dkustic</a><br/>
+<a href="{{site.url}}/games/">Play more games</a>
+</p>
 	<script src="js/main.js">
 	</script>
 </body>

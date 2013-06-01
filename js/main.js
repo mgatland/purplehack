@@ -17,7 +17,6 @@ var screenWipeDurationWinning = 6;
 var screenWipeDurationLosing = 16;
 var blankBetweenLevelTime = 16;
 
-//colors: http://colorschemedesigner.com/#5631Tw0w0w0w0
 var wallColor = "#A00068";
 var backgroundColor = "#800053";
 var burnedBackgroundColor = "#571C43";
@@ -34,7 +33,7 @@ var expansionColor = "#4C3E8E"; //mine color blended with background color
 var expansionFlashTime = 4;
 
 var levelColor = wallColor;
-var oldLevelColor = burnedBackgroundColor;
+var oldLevelColor = badnessOverWalls;
 
 var transitionWinTime = 90;
 var transitionLoseTime = 60*18;

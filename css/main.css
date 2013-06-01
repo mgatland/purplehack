@@ -1,7 +1,11 @@
 body {
 	background: black;
 	color: #555;
-	text-align: center;	
+	text-align: center;
+}
+
+html, body {
+	height: 90%;
 }
 
 #container {
