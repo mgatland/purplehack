@@ -301,9 +301,15 @@ var drawDots = function(row, value, foreColor, backColor) {
 
 var drawBar = function(row, current, max, foreColor, backColor) {
 	ctx.fillStyle = backColor;
+	var barWidth = toInt(current*width/max);
+	//make it always odd
+	if (barWidth % 2 == 1 && barWidth > 0) {
+		barWidth += 1;
+	}
+	var barOffset = toInt((width/2 - barWidth/2));
 	ctx.fillRect(0,(height+row)*pixelSize, width*pixelSize, 1*pixelSize);
 	ctx.fillStyle = foreColor;
-	ctx.fillRect(0,(height+row)*pixelSize, toInt(current*width/max)*pixelSize, 1*pixelSize);
+	ctx.fillRect(barOffset*pixelSize,(height+row)*pixelSize, barWidth*pixelSize, 1*pixelSize);
 }
 
 var updateOptionKeys = function () {
