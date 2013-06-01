@@ -420,7 +420,7 @@ var triggerExpansion = function (pos) {
 	world.wall.set(pos.x, pos.y, 0); //just to make the centre look different
 	var expansion = { pos: pos, age: 0};
 	expansions.push(expansion);
-	soundUtil.playExplodeSound();
+	soundUtil.playExpandSound();
 }
 
 var forEveryCellInDiamond = function (pos, bigRadius, func) {
@@ -510,7 +510,7 @@ var updatePlayer = function() {
 
 var SoundUtil = function() {
 	var audioContext;
-	var explodeSound;
+	var expandSound;
 	var buzzSound;
 	var winSound;
 	var audioEnabled = true;
@@ -532,7 +532,7 @@ var SoundUtil = function() {
 	}
 
 	music = new Audio("music/DJ DOS - LOOP (Creative Commons Attribution-Share Alike 3.0)" + extension); 
-	explodeSound = new Audio("sounds/thump" + extension);
+	expandSound = new Audio("sounds/thump" + extension);
 	buzzSound = new Audio("sounds/buzz" + extension);
 	winSound = new Audio("sounds/win" + extension);
 	music.loop = true;
@@ -548,8 +548,8 @@ var SoundUtil = function() {
 		sound.play();
 	}
 
-	this.playExplodeSound = function() {
-		play(explodeSound);
+	this.playExpandSound = function() {
+		play(expandSound);
 	}
 
 	this.playWinSound = function() {
