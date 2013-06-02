@@ -731,6 +731,14 @@ window.onload = function() {
 
 	addEventListener("keydown", function (e) {
 		keysDown[e.keyCode] = true;
+		switch(e.keyCode) {
+			case KeyEvent.DOM_VK_DOWN:
+			case KeyEvent.DOM_VK_UP:
+			case KeyEvent.DOM_VK_RIGHT:
+			case KeyEvent.DOM_VK_LEFT: 
+			e.preventDefault();
+			break;
+		}
 	}, false);
 
 	addEventListener("keyup", function (e) {
