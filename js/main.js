@@ -2,8 +2,13 @@
 //following http://www.lostdecadegames.com/how-to-make-a-simple-html5-canvas-game/
 
 // Constants:
-var canvas = document.createElement("canvas");
-var ctx = canvas.getContext("2d");
+var soundUtil;
+var overlay;
+var canvas;
+var ctx;
+var canvas2;
+var ctx2;
+
 var pixelSize = 16;
 var width = 32;
 var height = width;
@@ -48,22 +53,6 @@ var toInt = function (value) { return ~~value; }
 var rnd = function (range) {
 	return Math.floor(Math.random()*range);
 }
-
-var canvas2 = document.createElement("canvas");
-var ctx2 = canvas2.getContext("2d");
-canvas2.width = width*pixelSize;
-canvas2.height = (height+6)*pixelSize;
-document.getElementById('overlay').appendChild(canvas2);
-
-var overlay = new Overlay();
-
-canvas.width = width*pixelSize;
-canvas.height = (height+6)*pixelSize;
-document.getElementById('gameframe').appendChild(canvas);
-
-var gameElement = document.getElementById('game');
-gameElement.setAttribute("style","width:" + canvas.width + "px; height:" + canvas.height + "px");
-
 
 if (typeof KeyEvent == "undefined") {
     var KeyEvent = {
@@ -206,19 +195,8 @@ var mineAt = function (x, y) {
 	return foundMine;
 }
 
-level = 1;
-newLevel();
-
 // Handle keyboard controls
 var keysDown = {};
-
-addEventListener("keydown", function (e) {
-	keysDown[e.keyCode] = true;
-}, false);
-
-addEventListener("keyup", function (e) {
-	delete keysDown[e.keyCode];
-}, false);
 
 var drawPixel = function (x, y, color) {
 	ctx.fillStyle = color;
@@ -538,8 +516,6 @@ var updateBadness = function() {
 	})
 }
 
-
-
 var triggerExpansion = function (pos, isPlayer) {
 	var expansion = { pos: pos, age: 0, radius: explosionRadius, color: expansionColor, flashTime: expansionFlashTime};
 	if (isPlayer === true) {
@@ -734,6 +710,37 @@ var SoundUtil = function() {
 	}
 }
 
-var soundUtil = new SoundUtil();
-soundUtil.playMusic();
-setInterval(main, 1000 / 60);
+window.onload = function() {
+
+	canvas = document.createElement("canvas");
+	ctx = canvas.getContext("2d");
+	canvas2 = document.createElement("canvas");
+	ctx2 = canvas2.getContext("2d");
+	canvas2.width = width*pixelSize;
+	canvas2.height = (height+6)*pixelSize;
+	document.getElementById('overlay').appendChild(canvas2);
+
+	overlay = new Overlay();
+
+	canvas.width = width*pixelSize;
+	canvas.height = (height+6)*pixelSize;
+	document.getElementById('gameframe').appendChild(canvas);
+
+	var gameElement = document.getElementById('game');
+	gameElement.setAttribute("style","width:" + canvas.width + "px; height:" + canvas.height + "px");
+
+	addEventListener("keydown", function (e) {
+		keysDown[e.keyCode] = true;
+	}, false);
+
+	addEventListener("keyup", function (e) {
+		delete keysDown[e.keyCode];
+	}, false);
+
+	level = 1;
+	newLevel();
+
+	soundUtil = new SoundUtil();
+	soundUtil.playMusic();
+	setInterval(main, 1000 / 60);	
+}
