@@ -548,9 +548,6 @@ var updateExpansions = function() {
 	expansions.forEach(function (expansion) {
 		expansion.age++;
 		var pos = expansion.pos;
-
-		//clear goop - this is a bit weird, we could've put this logic in the goop spread code
-		//todo: duplicate code
 		forEveryCellInDiamond(expansion.pos, expansion.radius, function(x, y) {
 			world.badness.set(x,y,0);
 		});
