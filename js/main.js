@@ -692,8 +692,14 @@ var SoundUtil = function() {
 	}
 
 	this.playMusic = function() {
-		music.loop = true;
 		music.play();
+
+		//hack because music.loop = true; doesn't work in many browsers
+	    music.addEventListener('ended', function () {
+	        this.currentTime = 0;
+	        if (window.chrome) this.load(); //Chrome requires that we reload before playing.
+	        this.play();
+	    }, false);
 	}
 
 	this.toggleMute = function() {
