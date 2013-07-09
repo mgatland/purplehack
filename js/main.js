@@ -657,6 +657,7 @@ var SoundUtil = function() {
 			sound.pause();
 			sound.currentTime = 0;
 		}
+		if (window.chrome) sound.load(); //Chrome requires that we reload before playing.
 		sound.play();
 	}
 
