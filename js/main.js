@@ -46,7 +46,7 @@ var transitionCanSkipAfter = 90;
 
 var optionKeyDelay = 45;
 
-//to integer	
+//to integer
 var toInt = function (value) { return ~~value; }
 
 
@@ -99,7 +99,7 @@ var createGrid = function () {
 			return false;
 		}
 		if (y < 0 || y >= height) {
-			return false;	
+			return false;
 		}
 		return true;
 	}
@@ -108,8 +108,8 @@ var createGrid = function () {
 		if (!this.isValid(x, y)) {
 			return 0;
 		}
-		return gridData[x][y]; 
-	}; 
+		return gridData[x][y];
+	};
 
 	grid.set = function (x, y, value) {
 		if (!this.isValid(x, y)) {
@@ -173,7 +173,7 @@ var newLevel = function() {
 			} else {
 				x = -1; //loop again
 			}
-		}	
+		}
 	}
 }
 
@@ -209,7 +209,7 @@ var render = function () {
 
 	ctx.fillStyle = backgroundColor;
 	ctx.fillRect(0,0, width*pixelSize, height*pixelSize);
-	
+
 	forEachCell(world, function (world, x, y) {
 		if (world.badness.get(x, y) >= maxBadnessAt(x, y)) {
 			var color = badnessColor;
@@ -255,7 +255,7 @@ var drawExpansions = function() {
 		if (expansion.age < expansion.flashTime) {
 			forEveryCellInDiamond(expansion.pos, expansion.radius, function(x, y) {
 				if (world.wall.isValid(x,y)) {
-					drawPixel(x, y, expansion.color);	
+					drawPixel(x, y, expansion.color);
 				}
 			});
 		}
@@ -276,7 +276,7 @@ var forEveryCellInTeleportAnimation = function(pos, frame, func) {
 		var width = Math.min(3, xOffset+1);
 		for (var i = 0; i < width; i++) {
 			func(pos.x - xOffset + i, pos.y + j);
-			func(pos.x + xOffset - i, pos.y + j);		
+			func(pos.x + xOffset - i, pos.y + j);
 		}
 	}
 }
@@ -322,13 +322,13 @@ var drawEndTransition = function() {
 	if (endTransition.win === true) {
 		if (endTransition.age == 7) {
 			player.hidden = true;
-			endTransition.pos = player.pos;	
+			endTransition.pos = player.pos;
 		}
 
 		if (endTransition.age >= 7) {
 			forEveryCellInTeleportAnimation(endTransition.pos, endTransition.age - 7, function(x, y) {
 				if (world.wall.isValid(x, y)) {
-					drawPixel(x, y, playerColor);	
+					drawPixel(x, y, playerColor);
 				}
 			});
 		}
@@ -435,7 +435,7 @@ var update = function () {
 		if (endTransition.age > transitionCanSkipAfter
 			&& endTransition.age < startOfScreenWipe(endTransition)) {
 			if (anyKeysDown()) {
-				endTransition.age = startOfScreenWipe(endTransition);	
+				endTransition.age = startOfScreenWipe(endTransition);
 			}
 		}
 
@@ -445,7 +445,7 @@ var update = function () {
 			} else {
 				level = 1;
 			}
-			newLevel();	
+			newLevel();
 		}
 	}
 	//updateWinOrLoseCondition
@@ -571,17 +571,20 @@ var updatePlayer = function() {
 		var newPos = {};
 		newPos.x = player.pos.x;
 		newPos.y = player.pos.y;
-		if (keysDown[KeyEvent.DOM_VK_LEFT] === true) {
+
+		var mostRecentArrow = arrowKeyUtil.getMostRecentDirection();
+
+		if (mostRecentArrow === KeyEvent.DOM_VK_LEFT) {
 			newPos.x--;
-		} else if (keysDown[KeyEvent.DOM_VK_RIGHT] === true) {
+		} else if (mostRecentArrow === KeyEvent.DOM_VK_RIGHT) {
 			newPos.x++;
-		} else if (keysDown[KeyEvent.DOM_VK_UP] === true) {
+		} else if (mostRecentArrow === KeyEvent.DOM_VK_UP) {
 			newPos.y--;
-		} else if (keysDown[KeyEvent.DOM_VK_DOWN] === true) {
+		} else if (mostRecentArrow === KeyEvent.DOM_VK_DOWN) {
 			newPos.y++;
 		} else {
 			newPos = null;
-		}	
+		}
 
 		if (newPos != null) {
 			if (world.wall.isValid(newPos.x, newPos.y)) {
@@ -642,7 +645,7 @@ var SoundUtil = function() {
 		return;
 	}
 
-	music = new Audio("music/DJ DOS - LOOP (Creative Commons Attribution-Share Alike 3.0)" + extension); 
+	music = new Audio("music/DJ DOS - LOOP (Creative Commons Attribution-Share Alike 3.0)" + extension);
 	expandSound = new Audio("sounds/thump" + extension);
 	explodeSound = new Audio("sounds/explode" + extension);
 	buzzSound = new Audio("sounds/buzz" + extension);
@@ -705,7 +708,7 @@ var SoundUtil = function() {
 	this.toggleMute = function() {
 		if (muted) {
 			muted = false;
-			music.play();			
+			music.play();
 		} else {
 			muted = true;
 			music.pause();
@@ -713,6 +716,41 @@ var SoundUtil = function() {
 		}
 	}
 }
+
+var arrowKeyUtil = new (function () {
+	arrowKeysDown = [];
+
+	this.isArrowKey = function (key) {
+		switch(key) {
+			case KeyEvent.DOM_VK_DOWN:
+			case KeyEvent.DOM_VK_UP:
+			case KeyEvent.DOM_VK_RIGHT:
+			case KeyEvent.DOM_VK_LEFT:
+			return true;
+		}
+		return false;
+	}
+
+	var remove = function (key) {
+		arrowKeysDown = arrowKeysDown.filter(function (k) {
+			return k !== key;
+		});
+	}
+
+	this.pressed = function (key) {
+		if (arrowKeysDown.indexOf(key) > -1) return; //already down
+		arrowKeysDown.push(key);
+	};
+
+	this.released = function(key) {
+		remove(key);
+	};
+
+	this.getMostRecentDirection = function () {
+		if (arrowKeysDown.length === 0) return null;
+		return arrowKeysDown[arrowKeysDown.length - 1];
+	}
+})();
 
 window.onload = function() {
 
@@ -735,18 +773,17 @@ window.onload = function() {
 
 	addEventListener("keydown", function (e) {
 		keysDown[e.keyCode] = true;
-		switch(e.keyCode) {
-			case KeyEvent.DOM_VK_DOWN:
-			case KeyEvent.DOM_VK_UP:
-			case KeyEvent.DOM_VK_RIGHT:
-			case KeyEvent.DOM_VK_LEFT: 
+		if (arrowKeyUtil.isArrowKey(e.keyCode)) {
+			arrowKeyUtil.pressed(e.keyCode);
 			e.preventDefault();
-			break;
 		}
 	}, false);
 
 	addEventListener("keyup", function (e) {
 		delete keysDown[e.keyCode];
+		if (arrowKeyUtil.isArrowKey(e.keyCode)) {
+			arrowKeyUtil.released(e.keyCode);
+		}
 	}, false);
 
 	level = 1;
@@ -754,5 +791,5 @@ window.onload = function() {
 
 	soundUtil = new SoundUtil();
 	soundUtil.playMusic();
-	setInterval(main, 1000 / 60);	
+	setInterval(main, 1000 / 60);
 }
