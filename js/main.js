@@ -477,7 +477,8 @@ var removeFromArray = function(element, array) {
 var spreadBadnessInto = function(badness, pos) {
 	var currentBadness = badness.get(pos.x, pos.y);
 	if (currentBadness == 0) {
-		badness.set(pos.x, pos.y, 1 + rnd(normalTimeToGrowBadness / 2));
+		var maxBadness = maxBadnessAt(pos.x, pos.y);
+		badness.set(pos.x, pos.y, 1 + rnd(maxBadness / 2));
 	}
 }
 
@@ -486,8 +487,11 @@ var isSpace = function(x, y) {
 }
 
 var maxBadnessAt = function(x, y) {
-	if (isSpace(x, y)) {
+	var type = world.wall.get(x, y);
+	if (type === 0) {
 		return normalTimeToGrowBadness;
+	} else if (type === -1) {
+		return normalTimeToGrowBadness / 6;
 	}
 	return normalTimeToGrowBadness * 5;
 }
