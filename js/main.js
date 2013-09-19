@@ -9,12 +9,12 @@ var ctx;
 var canvas2;
 var ctx2;
 
-var pixelSize = 16;
-var width = 32;
+var pixelSize = 25;
+var width = 20;
 var height = width;
-var normalTimeToGrowBadness = 120; //number of frames it takes for badness to capture a cell.
-var explosionRadius = 7;
-var playerExplosionRadius = 5;
+var normalTimeToGrowBadness = 75; //number of frames it takes for badness to capture a cell.
+var explosionRadius = 5;
+var playerExplosionRadius = 4;
 var maxHealth = 120; //frames it takes to die when standing in goop
 var maxExpansionAge = 90; //frames that an expansion keeps goop from returning
 
@@ -136,7 +136,7 @@ var newLevel = function() {
 	mines = [];
 	player.pos.x = toInt(width / 2);
 	player.pos.y = toInt(height / 2);
-	player.moveDelay = 5;
+	player.moveDelay = 7;
 	player.moveTimer = 0;
 	player.health = maxHealth;
 
