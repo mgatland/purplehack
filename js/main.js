@@ -799,6 +799,7 @@ window.onload = function() {
 
 	level = 1;
 	newLevel();
+	track("newgame");
 
 	soundUtil = new SoundUtil();
 	soundUtil.playMusic();
