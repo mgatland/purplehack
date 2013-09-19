@@ -78,6 +78,7 @@ var numMines;
 var world;
 var mines;
 var level;
+var consecutivegames = 0;
 var endTransition;
 var startTransition;
 
@@ -613,6 +614,10 @@ var updatePlayer = function() {
 			triggerExpansion(player.pos, true);
 			soundUtil.playExplodeSound();
 			track("lose", level);
+			if (consecutivegames > 0) {
+				track("consecutivegames", consecutivegames);
+			}
+			consecutivegames++;
 		} else {
 			player.flashing++;
 			soundUtil.playBuzz();
