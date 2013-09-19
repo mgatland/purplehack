@@ -442,6 +442,7 @@ var update = function () {
 		if (endTransition.age == endTransition.duration) {
 			if (endTransition.win === true) {
 				level++;
+				track("nextlevel", level);
 			} else {
 				level = 1;
 			}
@@ -611,6 +612,7 @@ var updatePlayer = function() {
 			player.hidden = true;
 			triggerExpansion(player.pos, true);
 			soundUtil.playExplodeSound();
+			track("lose", level);
 		} else {
 			player.flashing++;
 			soundUtil.playBuzz();
@@ -792,4 +794,13 @@ window.onload = function() {
 	soundUtil = new SoundUtil();
 	soundUtil.playMusic();
 	setInterval(main, 1000 / 60);
+}
+
+var track = function (action, label, number) {
+	console.log("_trackEvent: " + action + ", " + label + ", " + number);
+	try {
+		_gaq.push(['_trackEvent',"tide", action, ""+label, number]);;
+	} catch (e) {
+
+	}
 }
