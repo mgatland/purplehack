@@ -47,6 +47,12 @@ var transitionCanSkipAfter = 90;
 
 var optionKeyDelay = 45;
 
+var editing = false;
+var editorMines = [];
+var edit = function () {
+	editing = !editing;
+}
+
 //to integer
 var toInt = function (value) { return ~~value; }
 
@@ -64,8 +70,12 @@ if (typeof KeyEvent == "undefined") {
         DOM_VK_UP: 38,
         DOM_VK_RIGHT: 39,
         DOM_VK_DOWN: 40,
+
         DOM_VK_M: 77,
-		DOM_VK_O: 79
+		DOM_VK_O: 79,
+		DOM_VK_S: 83,
+		DOM_VK_C: 67
+
     }
 }
 
@@ -124,6 +134,10 @@ var createGrid = function () {
 	return grid;
 }
 
+var map = [];
+map[1] = [{"x":6,"y":12}];
+map[2] = [{"x":6,"y":12},{"x":23,"y":15},{"x":10,"y":12}];
+
 var newLevel = function() {
 
 	if (level > highestLevel) {
@@ -160,7 +174,31 @@ var newLevel = function() {
 	});
 
 	//create mines
+	if (editing) {
+		//add one if there were none
+		if (editorMines.length === 0) {
+			editorMines.push({x:5, y:5});
+		}
+		loadMines(editorMines);
+	} else {
+		if (map[level] != null) {
+			loadMines(map[level]);
+		} else {
+			generateMines(numMines);
+		}
+	}
+}
 
+var loadMines = function (map) {
+	map.forEach(function (em) {
+		var mine = { pos: {}};
+		mine.pos.x = em.x;
+		mine.pos.y = em.y;
+		mines.push(mine);
+	});
+}
+
+var generateMines = function (numMines) {
 	for (var i = 0; i < numMines; i++) {
 		var x = -1;
 		var y = -1;
@@ -199,6 +237,7 @@ var mineAt = function (x, y) {
 
 // Handle keyboard controls
 var keysDown = {};
+var lastClick = null;
 
 var drawPixel = function (x, y, color) {
 	ctx.fillStyle = color;
@@ -383,6 +422,16 @@ var updateOptionKeys = function () {
 			optionKeyTimer = optionKeyDelay;
 			overlay.switchMode();
 		}
+		if (editing && keysDown[KeyEvent.DOM_VK_S] === true) {
+			optionKeyTimer = optionKeyDelay;
+			console.log(JSON.stringify(editorMines));
+		}
+		if (editing && keysDown[KeyEvent.DOM_VK_C] === true) {
+			optionKeyTimer = optionKeyDelay;
+			console.log("Clearing level");
+			editorMines = [];
+			mines = [];
+		}
 	}
 }
 
@@ -417,10 +466,34 @@ var startOfScreenWipe = function(transition) {
 	return transition.duration - screenWipeDuration(transition) - blankBetweenLevelTime;
 }
 
+var posEqual = function (p1, p2) {
+	return p1.x === p2.x && p1.y === p2.y;
+}
+
+var updateEditor = function () {
+	if (!editing) return;
+	if (lastClick != null) {
+		if (editorMines.filter(function (em) { return posEqual(em, lastClick);}).length > 0) {
+			editorMines = editorMines.filter(function (em) {return !posEqual(em, lastClick)});
+			mines = mines.filter(function (mine) {
+				return !posEqual(mine.pos, lastClick);
+			});
+		} else {
+			editorMines.push(lastClick);
+			var mine = { pos: {}};
+			mine.pos.x = lastClick.x;
+			mine.pos.y = lastClick.y;
+			mines.push(mine);
+		}
+		lastClick = null;
+	}
+}
+
 var update = function () {
 	updatePlayer();
 	updateBadness();
 	updateExpansions();
+	updateEditor();
 
 	//updateTransition
 	if (startTransition != null) {
@@ -800,6 +873,13 @@ window.onload = function() {
 	var gameElement = document.getElementById('game');
 	gameElement.setAttribute("style","width:" + canvas.width + "px; height:" + canvas.height + "px");
 
+	canvas2.addEventListener("click", function (event) {
+		var e = getRelativeCoords(event);
+		e.x = Math.floor(e.x / pixelSize);
+		e.y = Math.floor(e.y / pixelSize);
+		lastClick = {x:e.x, y:e.y};
+	});
+
 	addEventListener("keydown", function (e) {
 		keysDown[e.keyCode] = true;
 		if (arrowKeyUtil.isArrowKey(e.keyCode)) {
@@ -822,6 +902,11 @@ window.onload = function() {
 	soundUtil = new SoundUtil();
 	soundUtil.playMusic();
 	setInterval(main, 1000 / 60);
+}
+
+var getRelativeCoords = function (event) {
+    if (event.offsetX !== undefined && event.offsetY !== undefined) { return { x: event.offsetX, y: event.offsetY }; }
+    return { x: event.layerX, y: event.layerY };
 }
 
 var track = function (action, label, number) {
