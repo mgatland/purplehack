@@ -596,6 +596,7 @@ var updatePlayer = function() {
 			if (world.wall.isValid(newPos.x, newPos.y)) {
 				player.pos = newPos;
 				player.moveTimer = player.moveDelay;
+				arrowKeyUtil.afterMove();
 				//did we step on a mine?
 				var mine = mineAt(newPos.x, newPos.y);
 				if (mine != null) {
@@ -730,6 +731,8 @@ var SoundUtil = function() {
 
 var arrowKeyUtil = new (function () {
 	arrowKeysDown = [];
+	arrowKeysDownThisFrame = [];
+	keysToRelease = [];
 
 	this.isArrowKey = function (key) {
 		switch(key) {
@@ -751,11 +754,25 @@ var arrowKeyUtil = new (function () {
 	this.pressed = function (key) {
 		if (arrowKeysDown.indexOf(key) > -1) return; //already down
 		arrowKeysDown.push(key);
+		arrowKeysDownThisFrame.push(key);
 	};
 
 	this.released = function(key) {
-		remove(key);
+		//cannot release in the same frame
+		if (arrowKeysDownThisFrame.indexOf(key) > -1) {
+			keysToRelease.push(key); //release at end of the frame
+		} else {
+			remove(key); //remove immediately.
+		}
 	};
+
+	this.afterMove = function() {
+		arrowKeysDownThisFrame = [];
+		keysToRelease.forEach(function (key) {
+			remove(key);
+		});
+		keysToRelease = [];
+	}
 
 	this.getMostRecentDirection = function () {
 		if (arrowKeysDown.length === 0) return null;
