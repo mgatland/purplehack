@@ -9,10 +9,10 @@ var ctx;
 var canvas2;
 var ctx2;
 
-var pixelSize = 20;
-var width = 25;
+var pixelSize = 16;
+var width = 32;
 var height = width;
-var normalTimeToGrowBadness = 85; //number of frames it takes for badness to capture a cell.
+var normalTimeToGrowBadness = 120; //number of frames it takes for badness to capture a cell.
 var explosionRadius = 7;
 var playerExplosionRadius = 5;
 var maxHealth = 120; //frames it takes to die when standing in goop
